@@ -1,0 +1,116 @@
+{
+  "checked_at": "2026-11-12T13:06:40.567905+00:00",
+  "http_status": 200,
+  "response": {
+    "success": true,
+    "match_id": "lol-match-117393592614464354",
+    "input_id": "lol-match-117393592614464354",
+    "input_type": "match_id",
+    "checked_at": "2026-11-12T13:06:39.820Z",
+    "coverage": {
+      "schedule_metadata": true,
+      "live_row": true,
+      "numeric_live_state": true,
+      "webhook_event": true,
+      "coverage_level": "webhook_eligible",
+      "expected_live_state": false,
+      "expected_webhooks": false,
+      "expected_reason": "completed",
+      "precheck_endpoint": "/api/v1/lol/matches/lol-match-117393592614464354/coverage",
+      "message": "Numeric live state is active for this match. Live state webhooks are eligible while the match remains live.",
+      "postgame_coverage_level": "draft"
+    },
+    "league": {
+      "leagueId": "lol-lcp",
+      "slug": "lcp",
+      "name": "LCP",
+      "shortName": "LCP",
+      "region": "PACIFIC",
+      "tier": "1",
+      "live_state_policy": "primary_live_state_path"
+    },
+    "teams": {
+      "team1": {
+        "slug": "saigon-warrior",
+        "name": "Saigon Warrior",
+        "shortName": "SGW"
+      },
+      "team2": {
+        "slug": "nothinhere",
+        "name": "Nothin'Here",
+        "shortName": "NTH"
+      }
+    },
+    "games": [
+      {
+        "gameId": "lol-game-117393592614464355",
+        "gameNumber": 1,
+        "has_final_stats": true
+      },
+      {
+        "gameId": "lol-game-117393592614464356",
+        "gameNumber": 2,
+        "has_final_stats": true
+      },
+      {
+        "gameId": "lol-game-117393592614464357",
+        "gameNumber": 3,
+        "has_final_stats": true
+      }
+    ],
+    "active_live_game_id": "117393592614464357",
+    "live_cache": [
+      {
+        "gameId": "117393592614464357",
+        "matchId": "117393592614464354",
+        "state": "finished",
+        "leagueId": null,
+        "numeric_live_state": true,
+        "lastUpdated": "2026-11-12T08:35:57.117Z"
+      },
+      {
+        "gameId": "117393592614464356",
+        "matchId": "117393592614464354",
+        "state": "finished",
+        "leagueId": null,
+        "numeric_live_state": true,
+        "lastUpdated": "2026-11-12T07:42:54.574Z"
+      },
+      {
+        "gameId": "117393592614464355",
+        "matchId": "117393592614464354",
+        "state": "finished",
+        "leagueId": null,
+        "numeric_live_state": true,
+        "lastUpdated": "2026-11-12T06:52:00.311Z"
+      }
+    ],
+    "tracking": {
+      "tracked_games": 6,
+      "first_tracked_at": "2026-11-12T06:14:50.091Z",
+      "last_tracked_at": "2026-11-12T08:35:57.117Z",
+      "recent_webhook_events": 454,
+      "last_webhook_at": "2026-11-12T09:18:56.238Z",
+      "evidence_source": "cito"
+    },
+    "live_status": {
+      "status": "delayed",
+      "scope": "match",
+      "lastCheckedAt": "2026-11-12T13:06:39.949Z"
+    },
+    "definitions": {
+      "schedule_metadata": "A stored schedule/match row exists in Cito.",
+      "live_row": "A match with live rows never reports live_row: false.",
+      "numeric_live_state": "Current kills, gold, towers, objectives, player stats, or game clock are present.",
+      "webhook_event": "Recent lol.live.* events for this match exist in the webhook outbox (webhook_events), or numeric live state is present and therefore eligible to emit them.",
+      "expected_live_state": "True when the pipeline CAN and IS expected to produce numeric live state for THIS match now: the match is currently tracked, or it is inside its live window in a league with proven live tracking in the trailing 14 days.",
+      "expected_webhooks": "True when lol.live.* webhooks are expected for THIS match now. A match that is currently tracked always reports expected_webhooks: true.",
+      "expected_reason": "Machine-readable reason for the current expectation: not_started | completed | league_feed_delayed | league_not_coverable | tracking_stalled. tracking_stalled means coverage is expected but absent — alert on it.",
+      "tracking": "Observed live tracking for this match: tracked_games / first_tracked_at / last_tracked_at from the live cache, plus recent_webhook_events / last_webhook_at from the webhook outbox. Diff tracked_games against the games array to spot partial coverage (e.g. a missed game 1).",
+      "live_status": "Match-scoped live tracking status: live (actively tracked now) | delayed (tracked earlier, not active now) | none (never tracked) | temporarily_unavailable (pre-check failed).",
+      "postgame_enrichment": "Section-by-section postgame coverage for completed games. Use availableSections and missingSections on /lol/games/{gameId}/postgame for the exact game-level contract.",
+      "recommended_rule": "For production decisions, require schedule_metadata + live_row + numeric_live_state. Road of Legends). For LCK CL / Academy / unknown Tier-2, never assume live state before this pre-check confirms it. Alert when expected_webhooks is true but webhook_event stays false (expected_reason: tracking_stalled)."
+    },
+    "docs": "https://citoapi.com/docs/api/league-of-legends"
+  }
+}

@@ -1,0 +1,36 @@
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    env_file: ../.env
+    environment:
+      WEB_CONCURRENCY: '1'
+    ports: ['127.0.0.1:8000:8000']
+    restart: unless-stopped
+  frontend:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+    ports: ['127.0.0.1:8080:80']
+    depends_on: [backend]
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    profiles: [storage]
+    volumes: ['redis_data:/data']
+    command: ['redis-server', '--appendonly', 'yes']
+    restart: unless-stopped
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.3
+    profiles: [storage]
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-hexsight}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
+      CLICKHOUSE_DB: hexsight
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
+    volumes: ['clickhouse_data:/var/lib/clickhouse']
+    restart: unless-stopped
+volumes:
+  redis_data:
+  clickhouse_data:

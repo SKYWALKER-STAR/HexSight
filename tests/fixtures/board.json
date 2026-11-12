@@ -1,0 +1,182 @@
+{
+  "success": true,
+  "frameTimestamp": "2026-11-12T12:00:00Z",
+  "data": {
+    "gameId": "test-1",
+    "state": "in_game",
+    "gameTimeSeconds": 1200,
+    "blueTeam": {
+      "totalGold": 40000,
+      "totalKills": 12,
+      "towers": 4,
+      "dragons": [
+        "cloud",
+        "infernal"
+      ],
+      "barons": 1,
+      "inhibitors": 0
+    },
+    "redTeam": {
+      "totalGold": 35000,
+      "totalKills": 8,
+      "towers": 2,
+      "dragons": [
+        "cloud"
+      ],
+      "barons": 0,
+      "inhibitors": 0
+    },
+    "players": [
+      {
+        "side": "blue",
+        "role": "top",
+        "summonerName": "Test blue top",
+        "championId": "Ahri",
+        "totalGold": 8000,
+        "creepScore": 180,
+        "level": 13,
+        "kills": 2,
+        "deaths": 1,
+        "assists": 4,
+        "items": [
+          1001
+        ]
+      },
+      {
+        "side": "blue",
+        "role": "jungle",
+        "summonerName": "Test blue jungle",
+        "championId": "Ahri",
+        "totalGold": 8000,
+        "creepScore": 180,
+        "level": 13,
+        "kills": 2,
+        "deaths": 1,
+        "assists": 4,
+        "items": [
+          1001
+        ]
+      },
+      {
+        "side": "blue",
+        "role": "mid",
+        "summonerName": "Test blue mid",
+        "championId": "Ahri",
+        "totalGold": 8000,
+        "creepScore": 180,
+        "level": 13,
+        "kills": 2,
+        "deaths": 1,
+        "assists": 4,
+        "items": [
+          1001
+        ]
+      },
+      {
+        "side": "blue",
+        "role": "bot",
+        "summonerName": "Test blue bot",
+        "championId": "Ahri",
+        "totalGold": 8000,
+        "creepScore": 180,
+        "level": 13,
+        "kills": 2,
+        "deaths": 1,
+        "assists": 4,
+        "items": [
+          1001
+        ]
+      },
+      {
+        "side": "blue",
+        "role": "support",
+        "summonerName": "Test blue support",
+        "championId": "Ahri",
+        "totalGold": 8000,
+        "creepScore": 180,
+        "level": 13,
+        "kills": 2,
+        "deaths": 1,
+        "assists": 4,
+        "items": [
+          1001
+        ]
+      },
+      {
+        "side": "red",
+        "role": "top",
+        "summonerName": "Test red top",
+        "championId": "Ahri",
+        "totalGold": 7000,
+        "creepScore": 160,
+        "level": 12,
+        "kills": 2,
+        "deaths": 1,
+        "assists": 4,
+        "items": [
+          1001
+        ]
+      },
+      {
+        "side": "red",
+        "role": "jungle",
+        "summonerName": "Test red jungle",
+        "championId": "Ahri",
+        "totalGold": 7000,
+        "creepScore": 160,
+        "level": 12,
+        "kills": 2,
+        "deaths": 1,
+        "assists": 4,
+        "items": [
+          1001
+        ]
+      },
+      {
+        "side": "red",
+        "role": "mid",
+        "summonerName": "Test red mid",
+        "championId": "Ahri",
+        "totalGold": 7000,
+        "creepScore": 160,
+        "level": 12,
+        "kills": 2,
+        "deaths": 1,
+        "assists": 4,
+        "items": [
+          1001
+        ]
+      },
+      {
+        "side": "red",
+        "role": "bot",
+        "summonerName": "Test red bot",
+        "championId": "Ahri",
+        "totalGold": 7000,
+        "creepScore": 160,
+        "level": 12,
+        "kills": 2,
+        "deaths": 1,
+        "assists": 4,
+        "items": [
+          1001
+        ]
+      },
+      {
+        "side": "red",
+        "role": "support",
+        "summonerName": "Test red support",
+        "championId": "Ahri",
+        "totalGold": 7000,
+        "creepScore": 160,
+        "level": 12,
+        "kills": 2,
+        "deaths": 1,
+        "assists": 4,
+        "items": [
+          1001
+        ]
+      }
+    ]
+  }
+}
