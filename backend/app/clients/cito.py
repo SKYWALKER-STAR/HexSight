@@ -60,6 +60,7 @@ class CitoClient:
     async def get(self, path: str) -> dict:
         # Omit query values, headers and raw bodies: they can contain credentials.
         endpoint = urlsplit(path).path
+        logger.debug('Cito GET path=%s', endpoint)
         key = self.settings.cito_api_key.get_secret_value()
         if key:
             endpoint = endpoint.replace(key, '[REDACTED]')
@@ -94,6 +95,7 @@ class CitoClient:
         logger.debug('Cito GET path=%s status=%d elapsed_ms=%.1f response_bytes=%d retry_after_seconds=%s',
                      endpoint, code, (time.perf_counter() - started) * 1000, len(response.content),
                      retry_after_seconds(response.headers.get('retry-after')))
+        logger.debug('Cito GET path=%s response=%d', endpoint, code)
         if code in (401, 403):
             raise CitoError('permission', f'Cito HTTP {code}：密钥或套餐无权访问该实时数据')
         if code == 404:
