@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -7,6 +8,13 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ROOT / '.env', extra='ignore')
+    log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
+
+    @field_validator('log_level', mode='before')
+    @classmethod
+    def normalize_log_level(cls, value):
+        return value.strip().upper() if isinstance(value, str) else value
+
     cito_api_key: SecretStr = SecretStr('')
     cito_base_url: str = 'https://api.citoapi.com/api/v1'
     cito_webhook_secret: SecretStr = SecretStr('')

@@ -1,13 +1,14 @@
 import asyncio
-from asyncio.log import logger
+import logging
+import time
+from urllib.parse import urlsplit
 import math
 from collections import defaultdict
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 import httpx
 from backend.app.config import Settings
-import logging as lo
-logger = lo.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class CitoError(Exception):
@@ -57,18 +58,43 @@ class CitoClient:
         )
 
     async def get(self, path: str) -> dict:
+        # Omit query values, headers and raw bodies: they can contain credentials.
+        endpoint = urlsplit(path).path
+        key = self.settings.cito_api_key.get_secret_value()
+        if key:
+            endpoint = endpoint.replace(key, '[REDACTED]')
+        endpoint = endpoint[:256].replace('\r', '').replace('\n', '')
         if not self.settings.cito_api_key.get_secret_value():
+            logger.debug('Cito GET path=%s skipped: missing_key', endpoint)
             raise CitoError('missing_key', '服务端未配置 CITO_API_KEY')
-        await self.budget.consume()
+        try:
+            await self.budget.consume()
+        except CitoError:
+            logger.debug('Cito GET path=%s skipped: budget_exhausted used=%d limit=%d',
+                         endpoint, self.budget.used, self.budget.limit)
+            raise
+        started = time.perf_counter()
+        logger.debug('Cito GET path=%s started budget_used=%d budget_limit=%d',
+                     endpoint, self.budget.used, self.budget.limit)
         try:
             response = await self.http.get(path.lstrip('/'))
         except httpx.TimeoutException:
+            logger.debug('Cito GET path=%s failed: timeout elapsed_ms=%.1f', endpoint,
+                         (time.perf_counter() - started) * 1000)
             raise CitoError('timeout', 'Cito 请求超时', retryable=True) from None
         except httpx.RequestError:
+            logger.debug('Cito GET path=%s failed: network elapsed_ms=%.1f', endpoint,
+                         (time.perf_counter() - started) * 1000)
             raise CitoError('network', 'Cito 网络连接失败', retryable=True) from None
+        except asyncio.CancelledError:
+            logger.debug('Cito GET path=%s cancelled elapsed_ms=%.1f', endpoint,
+                         (time.perf_counter() - started) * 1000)
+            raise
         code = response.status_code
+        logger.debug('Cito GET path=%s status=%d elapsed_ms=%.1f response_bytes=%d retry_after_seconds=%s',
+                     endpoint, code, (time.perf_counter() - started) * 1000, len(response.content),
+                     retry_after_seconds(response.headers.get('retry-after')))
         if code in (401, 403):
-            logger.info(response.text)
             raise CitoError('permission', f'Cito HTTP {code}：密钥或套餐无权访问该实时数据')
         if code == 404:
             raise CitoError('not_found', 'Cito HTTP 404：比赛不存在或没有实时数据覆盖')
@@ -84,11 +110,17 @@ class CitoClient:
         try:
             data = response.json()
         except ValueError:
+            logger.debug('Cito GET path=%s invalid_json', endpoint)
             raise CitoError('schema', 'Cito 未返回有效 JSON') from None
         if not isinstance(data, dict):
+            logger.debug('Cito GET path=%s invalid_schema root_type=%s', endpoint, type(data).__name__)
             raise CitoError('schema', 'Cito 响应结构不符合预期')
         if data.get('success') is False:
+            logger.debug('Cito GET path=%s api_error success=false', endpoint)
             raise CitoError('api_error', 'Cito 返回失败状态，请检查比赛覆盖与套餐权限')
+        payload = data.get('data')
+        logger.debug('Cito GET path=%s parsed data_type=%s data_size=%s', endpoint,
+                     type(payload).__name__, len(payload) if isinstance(payload, (dict, list)) else None)
         return data
 
     async def stats(self, game_id: str) -> dict:

@@ -1,4 +1,5 @@
 import os
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +16,15 @@ from backend.app.services.schedule import ScheduleService
 
 def create_app(settings: Settings | None = None, *, client=None, repository=None):
     settings = settings or Settings()
+    # Own the application namespace without changing Uvicorn/httpx log levels.
+    app_logger = logging.getLogger('backend.app')
+    app_logger.setLevel(settings.log_level)
+    app_logger.propagate = False
+    if not any(getattr(handler, '_hexsight', False) for handler in app_logger.handlers):
+        handler = logging.StreamHandler()
+        handler._hexsight = True
+        handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(name)s: %(message)s'))
+        app_logger.addHandler(handler)
 
     @asynccontextmanager
     async def lifespan(app):
