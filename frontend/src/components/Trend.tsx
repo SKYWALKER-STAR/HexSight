@@ -46,7 +46,7 @@ export function Trend({ items, now }: { items: Snapshot[]; now: number }) {
           key={seg.d}
           d={seg.d}
           fill="none"
-          stroke={seg.sign === 'blue' ? '#00f59b' : '#ffb3b5'}
+          stroke={seg.sign === 'blue' ? '#0066f3' : '#e52521'}
           strokeWidth="2.5"
           strokeLinejoin="round"
         />
@@ -57,7 +57,7 @@ export function Trend({ items, now }: { items: Snapshot[]; now: number }) {
           cx={x(s)}
           cy={y(s.advantage.score!)}
           r="3"
-          fill={s.advantage.score! >= 0 ? '#00f59b' : '#ffb3b5'}
+          fill={s.advantage.score! >= 0 ? '#0066f3' : '#e52521'}
         >
           <title>
             {new Date(s.source_ts!).toLocaleTimeString()} · {s.advantage.score}
