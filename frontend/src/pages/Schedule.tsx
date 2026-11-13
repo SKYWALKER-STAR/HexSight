@@ -4,7 +4,7 @@ import './schedule.css'
 
 type Team = { name: string | null; code: string | null }
 type Match = { matchId: string; gameId: string | null; startTime: string | null; leagueName: string; leagueSlug: string; tournamentName: string; blockName: string | null; strategy: string | null; team1: Team; team2: Team }
-type ScheduleData = { items: Match[]; fetchedAt: string; demo_mode: boolean }
+type ScheduleData = { refreshSeconds: number; items: Match[]; fetchedAt: string; demo_mode: boolean }
 const date = (value: string | null) => value ? new Date(value).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }) : '时间待定'
 function countdown(value: string | null, now: number) {
   if (!value) return '时间待定'
@@ -25,16 +25,17 @@ export function Schedule() {
   useEffect(() => {
     const controller = new AbortController()
     let running = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let refreshSeconds = 86400
     async function refresh() {
       if (running) return
       running = true; setBusy(true)
-      try { const result = await api<ScheduleData>('/api/schedule', { signal: controller.signal }); setData(result); setError('') }
+      try { const result = await api<ScheduleData>('/api/schedule', { signal: controller.signal }); setData(result); refreshSeconds = result.refreshSeconds || 86400; setError('') }
       catch (e) { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : '赛程获取失败') }
-      finally { running = false; if (!controller.signal.aborted) setBusy(false) }
+      finally { running = false; if (!controller.signal.aborted) { setBusy(false); timer = setTimeout(refresh, refreshSeconds * 1000) } }
     }
     void refresh()
-    const interval = setInterval(refresh, 60000)
-    return () => { controller.abort(); clearInterval(interval) }
+    return () => { controller.abort(); clearTimeout(timer) }
   }, [revision])
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer) }, [])
   const all = data?.items || []
@@ -51,7 +52,7 @@ export function Schedule() {
   const today = new Date(now).toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' })
   return <div className="schedule-page">
     <header className="sc-header"><a className="sc-brand" href="/">■ HEXSIGHT <small>// LOL ESPORTS HUD</small></a><nav><a href="/">监控总览大屏</a><a href="/schedule" aria-current="page">赛程与即将开赛</a></nav><span className="sc-online">{data?.demo_mode ? 'DEMO / 合成数据' : 'REST / SCHEDULE'}</span></header>
-    <main className="sc-main"><section className="sc-intro"><span className="sc-label">RADAR ACTIVE</span><span className="sc-kicker"> // UPCOMING 14 DAYS</span><div className="sc-title"><div><h1>待开赛程与雷达预警</h1><p>未来两周职业赛事 · 北京时间 UTC+8 · 自动同步 Cito 赛程</p></div><div className="sc-metrics"><span>今日待开 <b>{all.filter(m => m.startTime && new Date(m.startTime).toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' }) === today).length}</b></span><span>1小时内 <b>{all.filter(m => m.startTime && Date.parse(m.startTime) > now && Date.parse(m.startTime) - now <= 3600000).length}</b></span><span>刷新 <b>60s</b></span></div></div><div className="sc-filters"><div><button className={league === 'all' ? 'active' : ''} onClick={() => setLeague('all')}>全部赛事 (ALL)</button>{Array.from(new Set(all.map(m => m.leagueSlug))).map(l => <button key={l} className={league === l ? 'active' : ''} onClick={() => setLeague(l)}>{all.find(m => m.leagueSlug === l)?.leagueName || l}</button>)}</div><select aria-label="赛制" value={format} onChange={e => setFormat(e.target.value)}><option value="all">全部赛制</option><option value="bo5">BO5</option><option value="bo3">BO3</option><option value="bo1">BO1</option></select><input aria-label="搜索赛程" placeholder="搜索战队、matchId 或 gameId…" value={query} onChange={e => setQuery(e.target.value)} /></div></section>
+    <main className="sc-main"><section className="sc-intro"><span className="sc-label">RADAR ACTIVE</span><span className="sc-kicker"> // UPCOMING 14 DAYS</span><div className="sc-title"><div><h1>待开赛程与雷达预警</h1><p>未来两周职业赛事 · 北京时间 UTC+8 · 自动同步 Cito 赛程</p></div><div className="sc-metrics"><span>今日待开 <b>{all.filter(m => m.startTime && new Date(m.startTime).toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' }) === today).length}</b></span><span>1小时内 <b>{all.filter(m => m.startTime && Date.parse(m.startTime) > now && Date.parse(m.startTime) - now <= 3600000).length}</b></span><span>刷新 <b>{(data?.refreshSeconds || 86400) >= 3600 ? `${(data?.refreshSeconds || 86400) / 3600}h` : `${data?.refreshSeconds}s`}</b></span></div></div><div className="sc-filters"><div><button className={league === 'all' ? 'active' : ''} onClick={() => setLeague('all')}>全部赛事 (ALL)</button>{Array.from(new Set(all.map(m => m.leagueSlug))).map(l => <button key={l} className={league === l ? 'active' : ''} onClick={() => setLeague(l)}>{all.find(m => m.leagueSlug === l)?.leagueName || l}</button>)}</div><select aria-label="赛制" value={format} onChange={e => setFormat(e.target.value)}><option value="all">全部赛制</option><option value="bo5">BO5</option><option value="bo3">BO3</option><option value="bo1">BO1</option></select><input aria-label="搜索赛程" placeholder="搜索战队、matchId 或 gameId…" value={query} onChange={e => setQuery(e.target.value)} /></div></section>
     {error && <div className="sc-error" role="alert">{error} {data && '· 以下为上次成功获取的赛程'} <button disabled={busy} onClick={() => setRevision(r => r + 1)}>重试</button></div>}
     {!data && busy && <div className="sc-empty" role="status">正在扫描赛事日历…</div>}
     {data?.demo_mode && <p className="sc-demo">演示模式：以下为合成赛程，不代表真实比赛。</p>}

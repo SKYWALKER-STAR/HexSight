@@ -6,8 +6,9 @@ from backend.app.clients.cito import CitoError
 
 class ScheduleService:
     """Shared cache prevents each browser from spending an upstream request."""
-    def __init__(self, client):
+    def __init__(self, client, refresh_seconds=86400):
         self.client = client
+        self.refresh_seconds = refresh_seconds
         self.lock = asyncio.Lock()
         self.cached = None
         self.expires = 0
@@ -33,6 +34,6 @@ class ScheduleService:
                 items.append(item)
             items.sort(key=lambda item: item.get('startTime') or '9999')
             self.cached = {'items': items, 'fetchedAt': datetime.now(timezone.utc).isoformat(),
-                           'refreshSeconds': 60, 'hours': 336}
-            self.expires = time.monotonic() + 60
+                           'refreshSeconds': self.refresh_seconds, 'hours': 336}
+            self.expires = time.monotonic() + self.refresh_seconds
             return self.cached

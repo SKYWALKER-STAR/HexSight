@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     cito_api_key: SecretStr = SecretStr('')
     cito_base_url: str = 'https://api.citoapi.com/api/v1'
     cito_webhook_secret: SecretStr = SecretStr('')
+    schedule_refresh_seconds: int = Field(86400, ge=60, le=604800)
     poll_interval_seconds: float = Field(30, ge=1)
     connect_timeout: float = Field(5, gt=0)
     read_timeout: float = Field(10, gt=0)
