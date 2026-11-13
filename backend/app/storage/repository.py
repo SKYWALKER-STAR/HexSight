@@ -183,6 +183,7 @@ class Repository:
                 if raw:
                     value = Snapshot.model_validate_json(raw)
                     self.latest[game_id] = value
+                    logger.debug('Loaded latest snapshot from Redis for game_id=%s,value=%s', game_id, value)
                     return value.refreshed()
             except Exception:
                 self.warnings['redis'] = 'Redis 不可用，已降级到进程内存'
@@ -194,6 +195,7 @@ class Repository:
                 if r.text.strip():
                     value = Snapshot.model_validate_json(json.loads(r.text)['snapshot_json'])
                     self.latest[game_id] = value
+                    logger.debug('Loaded latest snapshot from ClickHouse for game_id=%s,value=%s', game_id, value)
                     return value.refreshed()
             except Exception:
                 self.warnings['clickhouse'] = 'ClickHouse 查询失败，使用内存历史'
