@@ -19,6 +19,18 @@ class MonitorManager:
         self.last_frame = {}
         self.last_hash = {}
         self.closed = False
+        self.refresh_events = defaultdict(asyncio.Event)
+
+    def request_refresh(self, data):
+        ids = {str(data[k]).removeprefix('lol-game-') for k in ('gameId', 'canonicalGameId') if data.get(k)}
+        count = 0
+        for game_id, task in self.tasks.items():
+            status = self.repo.statuses.get(game_id)
+            match = not ids and status and data.get('matchId') == status.match_id
+            if not task.done() and (game_id.removeprefix('lol-game-') in ids or match):
+                self.refresh_events[game_id].set()
+                count += 1
+        return count
 
     async def emit_status(self, status):
         status.updated_at = utcnow()
@@ -120,7 +132,16 @@ class MonitorManager:
                 await self.emit_status(status)
                 if status.state != 'running':
                     break
-                await asyncio.sleep(delay)
+                if status.consecutive_failures:
+                    await asyncio.sleep(delay)
+                else:
+                    minimum = min(5, delay)
+                    await asyncio.sleep(minimum)
+                    try:
+                        await asyncio.wait_for(self.refresh_events[game_id].wait(), max(.001, delay - minimum))
+                    except asyncio.TimeoutError:
+                        pass
+                self.refresh_events[game_id].clear()
         except asyncio.CancelledError:
             raise
         except Exception:

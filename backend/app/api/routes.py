@@ -90,3 +90,46 @@ async def websocket(websocket: WebSocket, game_id: str):
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+
+
+@router.post('/api/webhooks/cito')
+async def cito_webhook(request: Request):
+    import hashlib
+    import hmac
+    import json
+    from collections import OrderedDict
+    state = request.app.state
+    secret = state.settings.cito_webhook_secret.get_secret_value()
+    if not secret or state.settings.demo_mode:
+        raise HTTPException(503, 'Webhook receiver is not configured')
+    raw = bytearray()
+    async for chunk in request.stream():
+        raw.extend(chunk)
+        if len(raw) > 262144:
+            raise HTTPException(413, 'Payload too large')
+    signature = hmac.new(secret.encode(), bytes(raw), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(signature, request.headers.get('x-cito-signature', '')):
+        raise HTTPException(401, 'Invalid signature')
+    try:
+        body = json.loads(raw)
+    except (ValueError, UnicodeDecodeError):
+        raise HTTPException(400, 'Invalid JSON') from None
+    if not isinstance(body, dict) or not isinstance(body.get('data'), dict):
+        raise HTTPException(400, 'Invalid event')
+    if body.get('test') or body['data'].get('test') or request.headers.get('x-cito-test') == 'true':
+        return {'status': 'test'}
+    event = body.get('event')
+    if not isinstance(event, str) or not event.startswith('lol.'):
+        return {'status': 'ignored'}
+    event_id = body.get('id')
+    if not isinstance(event_id, str) or not event_id or len(event_id) > 256:
+        raise HTTPException(400, 'Missing event id')
+    if not hasattr(state, 'webhook_seen'):
+        state.webhook_seen = OrderedDict()
+    if event_id in state.webhook_seen:
+        return {'status': 'duplicate'}
+    count = state.manager.request_refresh(body['data'])
+    state.webhook_seen[event_id] = None
+    if len(state.webhook_seen) > 10000:
+        state.webhook_seen.popitem(last=False)
+    return {'status': 'accepted', 'monitors_notified': count}

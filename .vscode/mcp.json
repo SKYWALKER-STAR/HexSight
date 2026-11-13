@@ -1,0 +1,19 @@
+{
+  "servers": {
+    "cito": {
+      "type": "http",
+      "url": "https://api.citoapi.com/mcp",
+      "headers": {
+        "x-api-key": "cito_5a6e0d547b225eee2db29a534e27e1610edcc3e6034adeaeb86aa93db1d5b1bc"
+      }
+    }
+  },
+  "inputs": [
+    {
+      "id": "cito-api-key",
+      "type": "promptString",
+      "description": "cito_5a6e0d547b225eee2db29a534e27e1610edcc3e6034adeaeb86aa93db1d5b1bc",
+      "password": false
+    }
+  ]
+}
