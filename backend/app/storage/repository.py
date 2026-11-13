@@ -1,11 +1,16 @@
 import asyncio
 import json
+import logging
+import re
+import time
 from collections import defaultdict, deque
 from datetime import timedelta
 import httpx
 from redis.asyncio import Redis
 from backend.app.config import Settings
 from backend.app.models.domain import MonitorStatus, Snapshot, utcnow
+
+logger = logging.getLogger(__name__)
 
 DDL = '''CREATE TABLE IF NOT EXISTS {db}.game_snapshots (
  game_id String, frame_ts DateTime64(3, 'UTC'), ingest_ts DateTime64(3, 'UTC'),
@@ -59,9 +64,36 @@ class Repository:
             self.warnings['clickhouse'] = 'ClickHouse 不可用，历史暂存内存；本次写入最多重试两次'
 
     async def query(self, sql: str, *, params=None, content=None):
-        response = await self.ch.post('/', params={'query': sql, **(params or {})}, content=content)
-        response.raise_for_status()
-        return response
+        started = time.monotonic()
+        operation = ' '.join(sql.split()[:2]) if sql.startswith('CREATE') else sql.split()[0]
+        try:
+            response = await self.ch.post('/', params={'query': sql, **(params or {})}, content=content)
+            response.raise_for_status()
+            return response
+        except Exception as exc:
+            # Never log request URLs, SQL parameters, payloads or raw exception text:
+            # those can contain credentials and match data.
+            status = None
+            code = None
+            reason = type(exc).__name__
+            if isinstance(exc, httpx.HTTPStatusError):
+                status = exc.response.status_code
+                match = re.search(r'Code:\s*(\d+)\.', exc.response.text[:4096])
+                code = match.group(1) if match else None
+                reason = {401: 'authentication_failed', 403: 'access_denied',
+                          404: 'http_endpoint_not_found'}.get(status, 'server_rejected_query')
+            elif isinstance(exc, httpx.TimeoutException):
+                reason = 'timeout'
+            elif isinstance(exc, httpx.ConnectError):
+                reason = 'connection_failed_check_dns_port_tls'
+            url = httpx.URL(self.settings.clickhouse_url)
+            logger.warning(
+                'ClickHouse request failed operation=%s host=%s port=%s database=%s '
+                'error_type=%s reason=%s http_status=%s clickhouse_code=%s elapsed_ms=%.0f',
+                operation, url.host, url.port, self.settings.clickhouse_database,
+                type(exc).__name__, reason, status, code, (time.monotonic() - started) * 1000,
+            )
+            raise
 
     async def save_status(self, status: MonitorStatus):
         self.statuses[status.game_id] = status
