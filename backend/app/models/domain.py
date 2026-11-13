@@ -93,6 +93,7 @@ class Snapshot(BaseModel):
 
 
 class MonitorStatus(BaseModel):
+    state: Literal['running', 'stopped', 'paused', 'error'] = 'stopped'
     game_id: str
     match_id: str | None = None
     game_time: float | None = None
