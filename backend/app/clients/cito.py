@@ -1,10 +1,13 @@
 import asyncio
+from asyncio.log import logger
 import math
 from collections import defaultdict
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 import httpx
 from backend.app.config import Settings
+import logging as lo
+logger = lo.getLogger(__name__)
 
 
 class CitoError(Exception):
@@ -65,6 +68,7 @@ class CitoClient:
             raise CitoError('network', 'Cito 网络连接失败', retryable=True) from None
         code = response.status_code
         if code in (401, 403):
+            logger.debug(response.text)
             raise CitoError('permission', f'Cito HTTP {code}：密钥或套餐无权访问该实时数据')
         if code == 404:
             raise CitoError('not_found', 'Cito HTTP 404：比赛不存在或没有实时数据覆盖')
