@@ -79,7 +79,7 @@ class CitoClient:
                      endpoint, self.budget.used, self.budget.limit)
         try:
             response = await self.http.get(path.lstrip('/'))
-            logger.debug(response.json(ensure_ascii=False))
+            logger.debug(response.json())
         except httpx.TimeoutException:
             logger.debug('Cito GET path=%s failed: timeout elapsed_ms=%.1f', endpoint,
                          (time.perf_counter() - started) * 1000)
