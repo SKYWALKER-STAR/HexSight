@@ -82,16 +82,20 @@ def normalize(payload: dict, game_id: str, stale_threshold: float, *, now=None, 
                               cs=number(raw.get('creepScore')), level=number(raw.get('level')),
                               kills=number(raw.get('kills')), deaths=number(raw.get('deaths')),
                               assists=number(raw.get('assists')),
+                              championIconUrl=text(raw.get('championIconUrl')),
+                              championDamageShare=number(raw.get('championDamageShare')),
+                              currentHealth=number(raw.get('currentHealth')),
+                              maxHealth=number(raw.get('maxHealth')),
                               items=[i for i in items if type(i) in (int, str)] if isinstance(items, list) else None))
-    game_seconds = number(data.get('gameTimeSeconds'))
-    if game_seconds is None:
+    game_time = number(data.get('gameTime'))
+    if game_time is None:
         quality.append('game_time_unknown')
     delayed = payload.get('delayed')
     delay = number(delayed.get('delay_seconds')) if isinstance(delayed, dict) else None
     if delay:
         quality.append('plan_delayed')
     snapshot = Snapshot(game_id=game_id, source_ts=source_ts, ingest_ts=now or utcnow(),
-                        game_seconds=game_seconds, game_state=text(data.get('state')) or 'unknown',
+                        game_seconds=game_time, game_state=text(data.get('state')) or 'unknown',
                         blue=teams[0], red=teams[1], players=players, quality=sorted(set(quality)),
                         delayed_seconds=delay, stale_threshold_seconds=stale_threshold, raw=payload, source=source)
     snapshot = snapshot.refreshed(now)

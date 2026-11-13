@@ -29,6 +29,10 @@ class Player(BaseModel):
     deaths: float | None = None
     assists: float | None = None
     items: list[int | str] | None = None
+    championIconUrl: str | None = None
+    championDamageShare: float | None = None
+    currentHealth: float | None = None
+    maxHealth: float | None = None
 
 
 class Factor(BaseModel):
@@ -59,7 +63,7 @@ class Snapshot(BaseModel):
     game_id: str
     source_ts: datetime | None = None
     ingest_ts: datetime
-    game_seconds: float | None = None
+    game_time: float | None = None
     game_state: str = 'unknown'
     lag_seconds: float | None = None
     freshness: Literal['fresh', 'stale', 'unknown'] = 'unknown'
@@ -91,7 +95,8 @@ class Snapshot(BaseModel):
 class MonitorStatus(BaseModel):
     game_id: str
     match_id: str | None = None
-    state: Literal['stopped', 'running', 'paused', 'error'] = 'stopped'
+    game_time: float | None = None
+    game_state: str = 'unknown'
     reason: str | None = None
     error_code: str | None = None
     consecutive_failures: int = 0
