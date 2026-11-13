@@ -31,7 +31,7 @@ def calculate(snapshot: Snapshot, settings: Settings) -> Snapshot:
     available = [(n, d, scale) for n, d, scale in objectives if d is not None]
     # Split the objective allocation among observed components; do not treat absent fields as zero.
     parts = [('gold', difference(b.gold, r.gold), max(settings.gold_scale_min,
-              (snapshot.game_seconds or 0) / 60 * settings.gold_scale_per_minute), settings.gold_weight),
+              (snapshot.game_time or 0) / 60 * settings.gold_scale_per_minute), settings.gold_weight),
              ('towers', difference(b.towers, r.towers), settings.tower_scale, settings.tower_weight)]
     parts += [(n, d, scale, settings.objective_weight / len(available)) for n, d, scale in available]
     total_weight = settings.gold_weight + settings.objective_weight + settings.tower_weight
@@ -39,7 +39,7 @@ def calculate(snapshot: Snapshot, settings: Settings) -> Snapshot:
     observed_weight += settings.tower_weight if b.towers is not None and r.towers is not None else 0
     observed_weight += settings.objective_weight * len(available) / 3
     coverage = observed_weight / total_weight if total_weight else 0
-    if snapshot.game_seconds is None:
+    if snapshot.game_time is None:
         coverage *= .7
     snapshot.advantage = score(parts, settings, coverage=coverage)
     for role in ('TOP', 'JUNGLE', 'MID', 'BOT', 'SUPPORT'):

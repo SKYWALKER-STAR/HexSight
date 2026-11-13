@@ -123,6 +123,13 @@ function LaneCard({ role, name, lane, fresh }: { role: string; name: string; lan
 
         <div className="lane-sides">
           <div className="lane-side blue">
+            <div className="champion-portrait" aria-label={blue?.champion || '英雄未知'}>
+              <span>?</span>
+              {blue?.championIconUrl && <img key={blue.championIconUrl} src={blue.championIconUrl} alt={blue.champion || '英雄'} onError={e => { e.currentTarget.style.display = 'none' }} />}
+            </div>
+            <div className="player-health">生命值 {format(blue?.currentHealth)} / {format(blue?.maxHealth)}</div>
+            {blue?.currentHealth != null && blue?.maxHealth != null && blue.maxHealth > 0 && <progress aria-label="生命值" max={blue.maxHealth} value={Math.max(0, Math.min(blue.currentHealth, blue.maxHealth))} />}
+
             <div className="lane-player">{blue?.name || '—'}</div>
             <div className="lane-champion">{blue?.champion || '英雄未知'}</div>
           </div>
@@ -136,6 +143,13 @@ function LaneCard({ role, name, lane, fresh }: { role: string; name: string; lan
             </div>
           </div>
           <div className="lane-side red">
+            <div className="champion-portrait" aria-label={red?.champion || '英雄未知'}>
+              <span>?</span>
+              {red?.championIconUrl && <img key={red.championIconUrl} src={red.championIconUrl} alt={red.champion || '英雄'} onError={e => { e.currentTarget.style.display = 'none' }} />}
+            </div>
+            <div className="player-health">生命值 {format(red?.currentHealth)} / {format(red?.maxHealth)}</div>
+            {red?.currentHealth != null && red?.maxHealth != null && red.maxHealth > 0 && <progress aria-label="生命值" max={red.maxHealth} value={Math.max(0, Math.min(red.currentHealth, red.maxHealth))} />}
+
             <div className="lane-player">{red?.name || '—'}</div>
             <div className="lane-champion">{red?.champion || '英雄未知'}</div>
           </div>
@@ -325,7 +339,7 @@ export function Dashboard() {
     reconnecting: '连接中断 · 自动重连',
   } as Record<string, string>)[connection]
 
-  const gameClock = formatClock(snapshot?.game_seconds)
+  const gameClock = formatClock(snapshot?.game_time)
   const lag = snapshot?.lag_seconds ?? snapshot?.delayed_seconds ?? null
   const lagLabel = lag == null ? '—' : `${Math.max(0, lag).toFixed(0)}s`
   const dataAge = age == null ? '—' : `${Math.max(0, age).toFixed(0)}s`

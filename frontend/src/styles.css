@@ -1562,3 +1562,7 @@ main { padding:12px 10px; }
 .lane-card-body { grid-template-columns:1fr; }
 }
 @media(prefers-reduced-motion:reduce) { .animate-arcade-blink { animation:none; } }
+.champion-portrait { position: relative; width: 36px; height: 36px; margin-bottom: 6px; border-radius: 6px; overflow: hidden; background: #263344; display: grid; place-items: center; }
+.champion-portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.player-health { font-size: 10px; font-variant-numeric: tabular-nums; margin-bottom: 4px; }
+.lane-side progress { display: block; width: 100%; height: 6px; accent-color: #4ade80; margin-bottom: 6px; }

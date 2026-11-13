@@ -29,7 +29,7 @@ class DemoClient:
                                 'level': 11 + i % 3, 'kills': 2, 'deaths': 1, 'assists': 3,
                                 'items': [1001, 1055]})
         return {'success': True, 'frameTimestamp': utcnow().isoformat(),
-                'data': {'gameId': game_id, 'state': 'in_game', 'gameTimeSeconds': 1200 + tick * 30,
+                'data': {'gameId': game_id, 'state': 'in_game', 'gameTime': 1200 + tick * 30,
                          **teams, 'players': players}}
 
     async def close(self):

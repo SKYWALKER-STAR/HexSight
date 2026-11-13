@@ -4,7 +4,7 @@
   "data": {
     "gameId": "test-1",
     "state": "in_game",
-    "gameTimeSeconds": 1200,
+    "gameTime": 1200,
     "blueTeam": {
       "totalGold": 40000,
       "totalKills": 12,

@@ -74,10 +74,10 @@ def test_stale_and_future_disable_score(payload, settings, offset):
 
 def test_missing_timestamp_and_game_time(payload, settings):
     payload.pop('frameTimestamp')
-    payload['data'].pop('gameTimeSeconds')
+    payload['data'].pop('gameTime')
     result = calc(payload, settings)
     assert result.freshness == 'unknown' and result.advantage.score is None
-    assert result.game_seconds is None
+    assert result.game_time is None
     assert 'missing_source_timestamp' in result.quality
 
 
