@@ -86,6 +86,7 @@ class MonitorManager:
                         await self.client.coverage(status.match_id)
                         coverage_checked = True
                     payload = await self.client.stats(game_id)
+                    logger.debug(payload)
                     snapshot = normalize(payload, game_id, self.settings.stale_threshold_seconds,
                                          source='demo' if self.settings.demo_mode else 'cito')
                     if snapshot and snapshot.source_ts and (snapshot.source_ts - snapshot.ingest_ts).total_seconds() > 5:
