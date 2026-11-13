@@ -36,6 +36,8 @@ class Repository:
         self.writer: asyncio.Task | None = None
 
     async def initialize(self):
+        logger.debug('Storage initialized redis_enabled=%s clickhouse_enabled=%s database=%s',
+                     bool(self.redis), bool(self.ch), self.settings.clickhouse_database)
         if self.redis:
             try:
                 await self.redis.ping()
@@ -106,6 +108,7 @@ class Repository:
                 self.warnings['redis'] = 'Redis 不可用，已降级到进程内存'
 
     def save(self, snapshot: Snapshot):
+        logger.debug('Snapshot saved to memory game_id=%s source_ts=%s', snapshot.game_id, snapshot.source_ts)
         self.latest[snapshot.game_id] = snapshot
         frames = self.frames[snapshot.game_id]
         frames.append(snapshot)
@@ -115,8 +118,14 @@ class Repository:
         if self.redis or self.ch:
             try:
                 self.queue.put_nowait(snapshot)
+                logger.debug('Snapshot queued game_id=%s queue_size=%d writer_running=%s',
+                             snapshot.game_id, self.queue.qsize(), bool(self.writer and not self.writer.done()))
             except asyncio.QueueFull:
+                logger.debug('Snapshot persistence skipped game_id=%s reason=queue_full', snapshot.game_id)
                 self.warnings['storage_queue'] = '存储队列已满，部分历史未持久化；最新态势仍可用'
+
+        else:
+            logger.debug('Snapshot memory_only game_id=%s reason=no_storage_configured', snapshot.game_id)
 
     async def _writer(self):
         while True:
@@ -135,8 +144,10 @@ class Repository:
             except Exception:
                 self.warnings['redis'] = 'Redis 不可用，已降级到进程内存'
         if not self.ch:
+            logger.debug('ClickHouse insert skipped game_id=%s reason=not_configured', snapshot.game_id)
             return
         if snapshot.source_ts is None:
+            logger.debug('ClickHouse insert skipped game_id=%s reason=missing_source_timestamp', snapshot.game_id)
             self.warnings['timestamp'] = '缺少数据源时间戳的快照仅保留在内存/Redis，未写入 ClickHouse'
             return
         row = dict(game_id=snapshot.game_id, frame_ts=snapshot.source_ts.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
@@ -146,6 +157,8 @@ class Repository:
                    overall_score=snapshot.advantage.score, quality=json.dumps(snapshot.quality),
                    snapshot_json=snapshot.model_dump_json())
         for attempt in range(2):
+            logger.debug('ClickHouse insert attempt game_id=%s attempt=%d table=%s.game_snapshots',
+                         snapshot.game_id, attempt + 1, self.settings.clickhouse_database)
             try:
                 if not self.ch_ready:
                     await self.ensure_ch()
@@ -154,6 +167,7 @@ class Repository:
                 await self.query(f'INSERT INTO {self.settings.clickhouse_database}.game_snapshots FORMAT JSONEachRow',
                                  params={'async_insert': 0}, content=(json.dumps(row) + '\n').encode())
                 self.warnings.pop('clickhouse', None)
+                logger.debug('ClickHouse insert succeeded game_id=%s source_ts=%s', snapshot.game_id, snapshot.source_ts)
                 return
             except Exception:
                 self.warnings['clickhouse'] = 'ClickHouse 写入失败，部分历史未持久化；最新态势仍可用'

@@ -126,7 +126,18 @@ class CitoClient:
         return data
 
     async def stats(self, game_id: str) -> dict:
-        return await self.get(f'lol/live/{game_id}/stats')
+        logger.debug('Stats fetch started game_id=%s', game_id)
+        try:
+            body = await self.get(f'lol/live/{game_id}/stats')
+        except CitoError as error:
+            logger.debug('Stats fetch failed game_id=%s code=%s retryable=%s',
+                         game_id, error.code, error.retryable)
+            raise
+        data = body.get('data')
+        logger.debug('Stats fetched game_id=%s data_type=%s entries=%s has_frame_timestamp=%s',
+                     game_id, type(data).__name__, len(data) if isinstance(data, (dict, list)) else None,
+                     bool(body.get('frameTimestamp')))
+        return body
 
     async def upcoming(self):
         return await self.get('lol/schedule/upcoming')

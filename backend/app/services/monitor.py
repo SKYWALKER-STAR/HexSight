@@ -1,3 +1,4 @@
+import logging
 import asyncio
 import hashlib
 import json
@@ -8,6 +9,9 @@ from backend.app.clients.cito import CitoError
 from backend.app.models.domain import MonitorStatus, utcnow
 from backend.app.services.normalizer import normalize, ENDED
 from backend.app.services.advantage import calculate
+
+
+logger = logging.getLogger(__name__)
 
 
 class MonitorManager:
@@ -89,6 +93,7 @@ class MonitorManager:
                     status.consecutive_failures = 0
                     status.error_code, status.reason, status.next_retry_at = None, None, None
                     if snapshot is None:
+                        logger.debug('Snapshot skipped game_id=%s reason=empty_response', game_id)
                         status.empty_responses += 1
                         status.reason = '未返回数值数据，等待下一次采集'
                         if status.empty_responses >= self.settings.max_empty_responses:
@@ -99,6 +104,8 @@ class MonitorManager:
                         old_ts = self.last_frame.get(game_id)
                         accept = ((old_ts is None or snapshot.source_ts > old_ts) if snapshot.source_ts
                                   else old_ts is None and digest != self.last_hash.get(game_id))
+                        logger.debug('Snapshot decision game_id=%s accept=%s source_ts=%s previous_ts=%s quality=%s',
+                                     game_id, accept, snapshot.source_ts, old_ts, snapshot.quality)
                         if accept:
                             snapshot = calculate(snapshot, self.settings)
                             self.repo.save(snapshot)
@@ -117,6 +124,7 @@ class MonitorManager:
                                          for value in (player.gold, player.cs, player.level, player.kills, player.deaths, player.assists)):
                             raise CitoError('no_numeric_state', '响应没有可用的数值实时状态，已停止监控')
                 except CitoError as error:
+                    logger.debug('Monitor failed game_id=%s code=%s retryable=%s', game_id, error.code, error.retryable)
                     status.consecutive_failures += 1
                     status.error_code, status.reason = error.code, str(error)
                     if not error.retryable or status.consecutive_failures >= self.settings.max_consecutive_failures:
@@ -144,7 +152,8 @@ class MonitorManager:
                 self.refresh_events[game_id].clear()
         except asyncio.CancelledError:
             raise
-        except Exception:
+        except Exception as error:
+            logger.debug('Monitor internal failure game_id=%s error_type=%s', game_id, type(error).__name__)
             # Do not log provider responses, keys or arbitrary exception strings.
             status.state, status.error_code = 'error', 'internal'
             status.reason = '采集任务异常，已隔离；请检查数据结构后重新开始'
