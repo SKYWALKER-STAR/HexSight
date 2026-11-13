@@ -10,6 +10,7 @@ from backend.app.storage.repository import Repository
 from backend.app.services.events import EventBus
 from backend.app.services.monitor import MonitorManager
 from backend.app.api.routes import router
+from backend.app.services.schedule import ScheduleService
 
 
 def create_app(settings: Settings | None = None, *, client=None, repository=None):
@@ -30,6 +31,7 @@ def create_app(settings: Settings | None = None, *, client=None, repository=None
             raise RuntimeError('Another HexSight collector is running; use one worker') from None
         app.state.settings = settings
         app.state.client = client or (DemoClient() if settings.demo_mode else CitoClient(settings))
+        app.state.schedule = ScheduleService(app.state.client)
         app.state.repo = repository or Repository(settings)
         app.state.events = EventBus()
         app.state.manager = MonitorManager(settings, app.state.client, app.state.repo, app.state.events)

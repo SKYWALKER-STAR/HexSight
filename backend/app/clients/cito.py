@@ -90,6 +90,9 @@ class CitoClient:
     async def stats(self, game_id: str) -> dict:
         return await self.get(f'lol/live/{game_id}/stats')
 
+    async def upcoming(self):
+        return await self.get('lol/matches/upcoming?hours=336')
+
     async def coverage(self, match_id: str):
         body = await self.get(f'lol/matches/{match_id}/coverage')
         data = body.get('data', body)

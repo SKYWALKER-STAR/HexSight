@@ -10,6 +10,15 @@ ID_PATTERN = r'^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$'
 GameId = Annotated[str, Path(pattern=ID_PATTERN, max_length=64)]
 
 
+@router.get('/api/schedule')
+async def schedule(request: Request):
+    try:
+        result = await request.app.state.schedule.get()
+        return {**result, 'demo_mode': request.app.state.settings.demo_mode}
+    except CitoError as error:
+        raise HTTPException(502, detail={'code': error.code, 'message': str(error)}) from None
+
+
 class StartRequest(BaseModel):
     gameId: str = Field(pattern=ID_PATTERN, max_length=64)
     matchId: str | None = Field(default=None, pattern=ID_PATTERN, max_length=64)

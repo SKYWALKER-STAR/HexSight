@@ -34,3 +34,12 @@ class DemoClient:
 
     async def close(self):
         pass
+
+    async def upcoming(self):
+        from datetime import timedelta
+        return {'data': [dict(matchId=f'demo-match-{i}', gameId=f'demo-game-{i}',
+                    startTime=(utcnow() + timedelta(hours=i * 3 + 1)).isoformat(),
+                    leagueName='DEMO', leagueSlug='demo', tournamentName='演示邀请赛',
+                    strategy='Bo3', state='unstarted',
+                    team1={'name': f'DEMO BLUE {i}', 'code': f'B{i}'},
+                    team2={'name': f'DEMO RED {i}', 'code': f'R{i}'}) for i in range(4)]}

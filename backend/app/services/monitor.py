@@ -132,7 +132,7 @@ class MonitorManager:
                 await self.emit_status(status)
                 if status.state != 'running':
                     break
-                if status.consecutive_failures:
+                if status.consecutive_failures or not self.settings.cito_webhook_secret.get_secret_value():
                     await asyncio.sleep(delay)
                 else:
                     minimum = min(5, delay)
