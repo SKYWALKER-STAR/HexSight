@@ -95,6 +95,7 @@ def normalize(payload: dict, game_id: str, stale_threshold: float, *, now=None, 
     if delay:
         quality.append('plan_delayed')
     snapshot = Snapshot(game_id=game_id, source_ts=source_ts, ingest_ts=now or utcnow(),
+                        patchVersion=text(data.get('patchVersion')) or text(payload.get('patchVersion')),
                         game_time=game_time, game_state=text(data.get('state')) or 'unknown',
                         blue=teams[0], red=teams[1], players=players, quality=sorted(set(quality)),
                         delayed_seconds=delay, stale_threshold_seconds=stale_threshold, raw=payload, source=source)

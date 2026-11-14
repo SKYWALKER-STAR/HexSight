@@ -504,6 +504,7 @@ export function Dashboard() {
                   <CircleHelp size={13} />优势强度，不代表获胜概率
                 </p>
                 <div className="score-meta">
+                  <span>版本 {snapshot?.patchVersion || '—'}</span>
                   <span>
                     <Timer size={13} />
                     {snapshot?.game_state || '—'}

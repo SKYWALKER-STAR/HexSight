@@ -60,6 +60,7 @@ class Lane(BaseModel):
 
 
 class Snapshot(BaseModel):
+    patchVersion: str | None = None
     game_id: str
     source_ts: datetime | None = None
     ingest_ts: datetime
