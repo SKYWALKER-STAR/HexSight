@@ -1566,3 +1566,18 @@ main { padding:12px 10px; }
 .champion-portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .player-health { font-size: 10px; font-variant-numeric: tabular-nums; margin-bottom: 4px; }
 .lane-side progress { display: block; width: 100%; height: 6px; accent-color: #4ade80; margin-bottom: 6px; }
+
+/* Equipment follows the provider's order, including repeated items. */
+.lane-side { min-width: 0; }
+.equipment { margin-top: 5px; min-width: 0; }
+.equipment-slots { display: flex; flex-wrap: wrap; gap: 4px; }
+.lane-side.red .equipment-slots { justify-content: flex-end; }
+.equipment-slot { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid var(--muted-2); background: #221e26; border-radius: 3px; flex-shrink: 0; }
+.equipment-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 2px; }
+.equipment-placeholder { color: var(--muted); font-size: 12px; }
+.equipment-tooltip { display: none; position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 10; width: max-content; max-width: 180px; padding: 6px 8px; background: #100d14; color: #fff; border: 1px solid var(--muted-2); border-radius: 3px; font-size: 11px; pointer-events: none; }
+.lane-side.red .equipment-tooltip { left: auto; right: 0; }
+.equipment-slot:hover .equipment-tooltip, .equipment-slot:focus .equipment-tooltip { display: block; }
+.equipment-slot:focus-visible { outline: 2px solid #ecc300; outline-offset: 2px; }
+.equipment-note, .equipment-retry { font-size: 10px; color: var(--muted); }
+.equipment-retry { background: none; border: 0; padding: 4px 0; cursor: pointer; text-decoration: underline; }

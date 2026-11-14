@@ -22,6 +22,7 @@ import { api } from '../api/client'
 import type { MonitorList, Snapshot, Team } from '../api/types'
 import { useMonitor } from '../hooks/useMonitor'
 import { Trend } from '../components/Trend'
+import { Equipment } from '../components/Equipment'
 
 const format = (v: number | null | undefined) => (v == null ? '—' : v.toLocaleString('zh-CN', { maximumFractionDigits: 0 }))
 const signed = (v: number | null | undefined) => (v == null ? '—' : `${v > 0 ? '+' : ''}${format(v)}`)
@@ -91,7 +92,7 @@ function Metric({ label, value, hint, tone }: { label: string; value: string; hi
   )
 }
 
-function LaneCard({ role, name, lane, fresh }: { role: string; name: string; lane: Snapshot['lanes'][number] | undefined; fresh: boolean }) {
+function LaneCard({ role, name, lane, fresh, patchVersion }: { patchVersion?: string | null; role: string; name: string; lane: Snapshot['lanes'][number] | undefined; fresh: boolean }) {
   const diffGold = lane?.differences.gold
   const diffCs = lane?.differences.cs
   const diffLevel = lane?.differences.level
@@ -132,6 +133,7 @@ function LaneCard({ role, name, lane, fresh }: { role: string; name: string; lan
 
             <div className="lane-player">{blue?.name || '—'}</div>
             <div className="lane-champion">{blue?.champion || '英雄未知'}</div>
+            <Equipment items={blue?.items} patchVersion={patchVersion} />
           </div>
           <div className="lane-mid">
             <div className="lane-badge">
@@ -152,6 +154,7 @@ function LaneCard({ role, name, lane, fresh }: { role: string; name: string; lan
 
             <div className="lane-player">{red?.name || '—'}</div>
             <div className="lane-champion">{red?.champion || '英雄未知'}</div>
+            <Equipment items={red?.items} patchVersion={patchVersion} />
           </div>
         </div>
       </div>
@@ -607,6 +610,7 @@ export function Dashboard() {
                     name={name}
                     lane={snapshot?.lanes.find(l => l.role === role)}
                     fresh={fresh}
+                    patchVersion={snapshot?.patchVersion}
                   />
                 ))}
               </div>
