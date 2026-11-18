@@ -126,7 +126,7 @@ function LaneCard({ role, name, lane, fresh, patchVersion }: { patchVersion?: st
           <div className="lane-side blue">
             <div className="champion-portrait" aria-label={blue?.championDetails?.name || blue?.champion || '英雄未知'}>
               <span>?</span>
-              {blue?.championIconUrl && <img key={blue.championIconUrl} src={blue.championIconUrl} alt={blue.champion || '英雄'} onError={e => { e.currentTarget.style.display = 'none' }} />}
+              {(blue?.championDetails?.imageUrl || blue?.championIconUrl) && <img key={blue?.championDetails?.imageUrl || blue?.championIconUrl} src={blue?.championDetails?.imageUrl || blue?.championIconUrl || undefined} alt={blue.champion || '英雄'} onError={e => { e.currentTarget.style.display = 'none' }} />}
             </div>
             <div className="player-health">生命值 {format(blue?.currentHealth)} / {format(blue?.maxHealth)}</div>
             {blue?.currentHealth != null && blue?.maxHealth != null && blue.maxHealth > 0 && <progress aria-label="生命值" max={blue.maxHealth} value={Math.max(0, Math.min(blue.currentHealth, blue.maxHealth))} />}
@@ -147,7 +147,7 @@ function LaneCard({ role, name, lane, fresh, patchVersion }: { patchVersion?: st
           <div className="lane-side red">
             <div className="champion-portrait" aria-label={red?.championDetails?.name || red?.champion || '英雄未知'}>
               <span>?</span>
-              {red?.championIconUrl && <img key={red.championIconUrl} src={red.championIconUrl} alt={red.champion || '英雄'} onError={e => { e.currentTarget.style.display = 'none' }} />}
+              {(red?.championDetails?.imageUrl || red?.championIconUrl) && <img key={red?.championDetails?.imageUrl || red?.championIconUrl} src={red?.championDetails?.imageUrl || red?.championIconUrl || undefined} alt={red.champion || '英雄'} onError={e => { e.currentTarget.style.display = 'none' }} />}
             </div>
             <div className="player-health">生命值 {format(red?.currentHealth)} / {format(red?.maxHealth)}</div>
             {red?.currentHealth != null && red?.maxHealth != null && red.maxHealth > 0 && <progress aria-label="生命值" max={red.maxHealth} value={Math.max(0, Math.min(red.currentHealth, red.maxHealth))} />}

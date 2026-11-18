@@ -216,7 +216,7 @@ class CitoClient:
                 details = next((champions[str(i).strip().casefold()] for i in identifiers
                                 if i is not None and str(i).strip().casefold() in champions), None)
                 player['championDetails'] = details
-                if details and not player.get('championIconUrl'):
+                if details and isinstance(details.get('imageUrl'), str) and details['imageUrl']:
                     player['championIconUrl'] = details.get('imageUrl')
         logger.debug('Stats fetched game_id=%s data_type=%s entries=%s has_frame_timestamp=%s',
                      game_id, type(data).__name__, len(data) if isinstance(data, (dict, list)) else None,

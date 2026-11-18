@@ -122,3 +122,11 @@ def test_explicit_no_numeric_coverage_rejected(payload, settings):
     with pytest.raises(CitoError) as error:
         calc(payload, settings)
     assert error.value.code == 'no_coverage'
+
+
+def test_champion_image_url_not_truncated(payload, settings):
+    url = 'https://api.citoapi.com/img/m/' + 'a' * 220 + '.png'
+    payload['data']['players'][0]['championIconUrl'] = url
+    snapshot = normalize(payload, 'test-1', settings.stale_threshold_seconds)
+    assert snapshot.players[0].championIconUrl == url
+    assert snapshot.model_dump()['players'][0]['championIconUrl'] == url

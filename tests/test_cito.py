@@ -147,14 +147,14 @@ async def test_stats_still_rejects_root_list(settings):
 
 async def test_champions_shared_aliases_and_details(settings):
     champion = {'championId': 103, 'id': 'Ahri', 'name': 'Ahri',
-                'imageUrl': 'https://example.com/ahri.png', 'stats': {'hp': 590}}
+                'imageUrl': 'https://example.com/' + 'a' * 220 + '.png', 'stats': {'hp': 590}}
     calls = []
     def handler(request):
         calls.append(request.url.path)
         if request.url.path.endswith('/static/champions'):
             return httpx.Response(200, json=[champion])
         return httpx.Response(200, json={'data': {'players': [
-            {'championId': 103}, {'championId': 'ahri'},
+            {'championId': 103, 'championIconUrl': 'https://example.com/truncated'}, {'championId': 'ahri'},
             {'championName': 'Ahri'}, {'championId': 'unknown'}]}})
     client = CitoClient(settings, transport=httpx.MockTransport(handler))
     try:
