@@ -124,7 +124,7 @@ function LaneCard({ role, name, lane, fresh, patchVersion }: { patchVersion?: st
 
         <div className="lane-sides">
           <div className="lane-side blue">
-            <div className="champion-portrait" aria-label={blue?.champion || '英雄未知'}>
+            <div className="champion-portrait" aria-label={blue?.championDetails?.name || blue?.champion || '英雄未知'}>
               <span>?</span>
               {blue?.championIconUrl && <img key={blue.championIconUrl} src={blue.championIconUrl} alt={blue.champion || '英雄'} onError={e => { e.currentTarget.style.display = 'none' }} />}
             </div>
@@ -132,7 +132,7 @@ function LaneCard({ role, name, lane, fresh, patchVersion }: { patchVersion?: st
             {blue?.currentHealth != null && blue?.maxHealth != null && blue.maxHealth > 0 && <progress aria-label="生命值" max={blue.maxHealth} value={Math.max(0, Math.min(blue.currentHealth, blue.maxHealth))} />}
 
             <div className="lane-player">{blue?.name || '—'}</div>
-            <div className="lane-champion">{blue?.champion || '英雄未知'}</div>
+            <div className="lane-champion">{blue?.championDetails?.name || blue?.champion || '英雄未知'}</div>
             <Equipment items={blue?.items} patchVersion={patchVersion} />
           </div>
           <div className="lane-mid">
@@ -145,7 +145,7 @@ function LaneCard({ role, name, lane, fresh, patchVersion }: { patchVersion?: st
             </div>
           </div>
           <div className="lane-side red">
-            <div className="champion-portrait" aria-label={red?.champion || '英雄未知'}>
+            <div className="champion-portrait" aria-label={red?.championDetails?.name || red?.champion || '英雄未知'}>
               <span>?</span>
               {red?.championIconUrl && <img key={red.championIconUrl} src={red.championIconUrl} alt={red.champion || '英雄'} onError={e => { e.currentTarget.style.display = 'none' }} />}
             </div>
@@ -153,7 +153,7 @@ function LaneCard({ role, name, lane, fresh, patchVersion }: { patchVersion?: st
             {red?.currentHealth != null && red?.maxHealth != null && red.maxHealth > 0 && <progress aria-label="生命值" max={red.maxHealth} value={Math.max(0, Math.min(red.currentHealth, red.maxHealth))} />}
 
             <div className="lane-player">{red?.name || '—'}</div>
-            <div className="lane-champion">{red?.champion || '英雄未知'}</div>
+            <div className="lane-champion">{red?.championDetails?.name || red?.champion || '英雄未知'}</div>
             <Equipment items={red?.items} patchVersion={patchVersion} />
           </div>
         </div>

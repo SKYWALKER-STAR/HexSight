@@ -144,3 +144,40 @@ async def test_stats_still_rejects_root_list(settings):
         assert caught.value.code == 'schema'
     finally:
         await client.close()
+
+async def test_champions_shared_aliases_and_details(settings):
+    champion = {'championId': 103, 'id': 'Ahri', 'name': 'Ahri',
+                'imageUrl': 'https://example.com/ahri.png', 'stats': {'hp': 590}}
+    calls = []
+    def handler(request):
+        calls.append(request.url.path)
+        if request.url.path.endswith('/static/champions'):
+            return httpx.Response(200, json=[champion])
+        return httpx.Response(200, json={'data': {'players': [
+            {'championId': 103}, {'championId': 'ahri'},
+            {'championName': 'Ahri'}, {'championId': 'unknown'}]}})
+    client = CitoClient(settings, transport=httpx.MockTransport(handler))
+    try:
+        results = await asyncio.gather(*(client.stats(str(i)) for i in range(5)))
+        assert sum(p.endswith('/static/champions') for p in calls) == 1
+        for result in results:
+            players = result['data']['players']
+            assert all(p['championDetails'] == champion for p in players[:3])
+            assert players[0]['championIconUrl'] == champion['imageUrl']
+            assert players[3]['championDetails'] is None
+    finally:
+        await client.close()
+
+
+async def test_champions_refresh_failure_retains_cache(settings):
+    responses = [httpx.Response(200, json={'data': [{'key': '103', 'name': 'Ahri'}]}),
+                 httpx.Response(429, headers={'retry-after': '900'})]
+    client = CitoClient(settings, transport=httpx.MockTransport(lambda _: responses.pop(0)))
+    try:
+        first = await client.champion_catalog()
+        client._champions_refresh_at = 0
+        assert await client.champion_catalog() == first
+        assert await client.champion_catalog() == first
+        assert not responses
+    finally:
+        await client.close()

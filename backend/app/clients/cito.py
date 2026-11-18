@@ -50,6 +50,9 @@ class CitoClient:
     def __init__(self, settings: Settings, transport=None):
         self.settings = settings
         self.budget = RequestBudget(settings.request_budget)
+        self._champions = {}
+        self._champions_refresh_at = 0.0
+        self._champions_lock = asyncio.Lock()
         self._items = {}
         self._items_refresh_at = 0.0
         self._items_lock = asyncio.Lock()
@@ -159,6 +162,37 @@ class CitoClient:
                 logger.warning('Item catalog unavailable code=%s reason=%s', error.code, str(error))
             return self._items
 
+    async def champion_catalog(self):
+        """One full catalog per day, shared across games and concurrent requests."""
+        async with self._champions_lock:
+            if time.monotonic() < self._champions_refresh_at:
+                return self._champions
+            try:
+                body = await self.get('lol/static/champions', allow_list=True)
+                rows = body.get('data', body) if isinstance(body, dict) else body
+                if isinstance(rows, dict) and 'champions' in rows:
+                    rows = rows['champions']
+                catalog = {}
+                entries = rows.items() if isinstance(rows, dict) else enumerate(rows) if isinstance(rows, list) else []
+                for key, value in entries:
+                    if isinstance(value, dict):
+                        aliases = [value.get(field) for field in ('championId', 'id', 'key', 'name')]
+                        if isinstance(rows, dict):
+                            aliases.append(key)
+                        for alias in aliases:
+                            if type(alias) in (int, str) and str(alias).strip():
+                                catalog[str(alias).strip().casefold()] = value
+                if not catalog:
+                    raise CitoError('schema',
+                                    f'Invalid static champion catalog: rows_type={type(rows).__name__}, '
+                                    f'rows_count={len(rows) if isinstance(rows, (dict, list)) else 0}')
+                self._champions = catalog
+                self._champions_refresh_at = time.monotonic() + 86400
+            except CitoError as error:
+                self._champions_refresh_at = time.monotonic() + max(300, error.retry_after or 0)
+                logger.warning('Champion catalog unavailable code=%s reason=%s', error.code, str(error))
+            return self._champions
+
     async def stats(self, game_id: str) -> dict:
         logger.debug('Stats fetch started game_id=%s', game_id)
         try:
@@ -175,6 +209,15 @@ class CitoClient:
             for player in players:
                 if isinstance(player.get('items'), list):
                     player['itemDetails'] = [catalog.get(str(i)) for i in player['items'] if type(i) in (int, str)]
+        if any(p.get('championId') or p.get('championName') for p in players):
+            champions = await self.champion_catalog()
+            for player in players:
+                identifiers = (player.get('championId'), player.get('championName'))
+                details = next((champions[str(i).strip().casefold()] for i in identifiers
+                                if i is not None and str(i).strip().casefold() in champions), None)
+                player['championDetails'] = details
+                if details and not player.get('championIconUrl'):
+                    player['championIconUrl'] = details.get('imageUrl')
         logger.debug('Stats fetched game_id=%s data_type=%s entries=%s has_frame_timestamp=%s',
                      game_id, type(data).__name__, len(data) if isinstance(data, (dict, list)) else None,
                      bool(body.get('frameTimestamp')))

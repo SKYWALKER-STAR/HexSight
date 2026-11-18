@@ -22,6 +22,7 @@ class Player(BaseModel):
     role: str | None = None
     name: str | None = None
     champion: str | None = None
+    championDetails: dict[str, Any] | None = None
     gold: float | None = None
     cs: float | None = None
     level: float | None = None
