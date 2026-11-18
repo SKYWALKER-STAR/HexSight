@@ -1639,15 +1639,19 @@ main { padding:12px 10px; }
 
 /* Explicit economy direction, independent of the overall advantage score. */
 .lane-economy-tag { display:inline-block; margin:2px 3px; padding:2px 5px; font-size:10px; color:#b6aeba; border:1px solid #514854; white-space:nowrap; }
-.lane-economy-tag.ahead { background:#ecc300; color:#201900; border-color:#ecc300; font-weight:700; }
+.lane-economy-tag.ahead { background:#ffe85c; color:#211800; border-color:#fff5b0; font-weight:700; box-shadow:0 0 10px #ffe85c55; }
 .lane-economy-tag.behind { background:#3a2428; color:#ffb4aa; border-color:#8c4c50; }
-.lane-card.gold-blue { border-left:4px solid #0066f3; border-right:1px solid #38333c; }
-.lane-card.gold-red { border-left:1px solid #38333c; border-right:4px solid #e52521; }
+.lane-card.gold-blue { border-left:4px solid #53baff; border-right:1px solid #38333c; box-shadow:inset 5px 0 16px #299aff22, -2px 0 8px #53baff44; }
+.lane-card.gold-red { border-left:1px solid #38333c; border-right:4px solid #ff7970; box-shadow:inset -5px 0 16px #ff655522, 2px 0 8px #ff797044; }
 .lane-card.gold-even, .lane-card.gold-unknown { border-left:1px solid #59525e; border-right:1px solid #59525e; }
-.lane-card.gold-blue .lane-badge { border-color:#73a6ff; }
-.lane-card.gold-red .lane-badge { border-color:#ff756e; }
-.lane-card.gold-blue .lane-badge-title { color:#b1c5ff; }
-.lane-card.gold-red .lane-badge-title { color:#ffb4aa; }
-.lane-team-stats.blue.gold-ahead { background:#1d2b48; box-shadow:inset 3px 0 #0066f3; }
-.lane-team-stats.red.gold-ahead { background:#402329; box-shadow:inset -3px 0 #e52521; }
-.gold-ahead .lane-gold-number strong, .gold-ahead .lane-gold-number small { color:#ffe044; }
+.lane-card.gold-blue .lane-badge { border-color:#72caff; background:#173f70; box-shadow:0 0 12px #53baff44; }
+.lane-card.gold-red .lane-badge { border-color:#ff9385; background:#702f39; box-shadow:0 0 12px #ff797044; }
+.lane-card.gold-blue .lane-badge-title { color:#e1f5ff; }
+.lane-card.gold-red .lane-badge-title { color:#ffe9e4; }
+.lane-team-stats.blue.gold-ahead { color:#e1f5ff; background:#234d7d; box-shadow:inset 4px 0 #72caff, inset 0 0 0 1px #72caff88; }
+.lane-team-stats.red.gold-ahead { color:#ffe9e4; background:#713540; box-shadow:inset -4px 0 #ff9385, inset 0 0 0 1px #ff938588; }
+.gold-ahead .lane-gold-number strong, .gold-ahead .lane-gold-number small, .lane-card.gold-blue .lane-badge-value, .lane-card.gold-red .lane-badge-value { color:#fff28a; font-weight:700; }
+.lane-team-stats.gold-ahead .metric-positive, .lane-team-stats.gold-ahead.leading .lane-data-row:first-child > span:first-child strong { color:#9dffa8; }
+.lane-team-stats.gold-ahead .metric-ahead { color:#fff28a; }
+.lane-team-stats.blue.gold-ahead .lane-gold-track > span { background:#53baff; }
+.lane-team-stats.red.gold-ahead .lane-gold-track > span { background:#ff7970; }
