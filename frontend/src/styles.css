@@ -1581,3 +1581,58 @@ main { padding:12px 10px; }
 .equipment-slot:focus-visible { outline: 2px solid #ecc300; outline-offset: 2px; }
 .equipment-note, .equipment-retry { font-size: 10px; color: var(--muted); }
 .equipment-retry { background: none; border: 0; padding: 4px 0; cursor: pointer; text-decoration: underline; }
+
+/* Prototype-aligned lane comparison: identities above paired team data. */
+.lane-card { padding: 12px 10px 8px; border-left: 4px solid #59525e; }
+.lane-card.blue { border-left-color: #0066f3; }
+.lane-card.red { border-left-color: #e52521; }
+.lane-card.even { border-left-color: #ecc300; }
+.lane-card-head { grid-template-columns: 48px minmax(0, 1fr); gap: 10px; align-items: start; }
+.lane-role { display: grid; gap: 4px; text-align: center; padding-top: 4px; }
+.lane-role-icon { width: 38px; height: 28px; background: #0066f3; color: white; }
+.lane-role-name { font-size: 11px; }
+.lane-role-en { font-size: 9px; letter-spacing: 0; }
+.lane-sides { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; }
+.lane-side { grid-template-columns: 32px minmax(0, 1fr); gap: 3px 7px; align-items: center; }
+.lane-side .champion-portrait { grid-column: 1; grid-row: 1 / 3; width: 30px; height: 30px; margin: 0; border-radius: 0; }
+.lane-side .lane-player { grid-column: 2; grid-row: 1; font-size: 14px; }
+.lane-side .lane-champion { grid-column: 2; grid-row: 2; font-size: 11px; }
+.lane-side .equipment { grid-column: 1 / -1; grid-row: 3; margin-top: 4px; }
+.lane-side .player-health { grid-column: 1 / -1; grid-row: 4; font-size: 9px; margin: 0; color: #a69ba8; }
+.lane-side progress { grid-column: 1 / -1; grid-row: 5; height: 3px; margin: 0; }
+.lane-side.red { grid-template-columns: minmax(0, 1fr) 32px; }
+.lane-side.red .champion-portrait { grid-column: 2; }
+.lane-side.red .lane-player, .lane-side.red .lane-champion { grid-column: 1; }
+.lane-mid { align-self: start; padding-top: 3px; max-width: 230px; }
+.lane-badge { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 5px 9px; border: 1px solid #6f6261; background: #241f27; }
+.lane-badge-title { font-size: 11px; letter-spacing: 0; }
+.lane-badge-value { font-size: 16px; }
+.lane-card.blue .lane-badge, .lane-card.red .lane-badge { border: 2px solid #ecc300; }
+.lane-card.blue .lane-badge-title, .lane-card.red .lane-badge-title { color: #18bd21; }
+.lane-card.even .lane-badge-title { color: #ecc300; }
+.lane-badge-sub { font-size: 9px; margin-top: 4px; letter-spacing: 0; }
+.lane-lead-tag { display: inline-block; padding: 2px 5px; background: #ecc300; color: #211b00; font-size: 10px; vertical-align: middle; }
+.lane-card .lane-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; padding: 8px; margin-top: 10px; background: #211d25; border: 1px solid #443b42; }
+.lane-team-stats { padding: 6px 8px; min-width: 0; font-family: 'Space Mono', monospace; font-size: 11px; font-variant-numeric: tabular-nums; }
+.lane-team-stats.blue { color: #b1c5ff; border-right: 1px solid #3a3441; }
+.lane-team-stats.red { color: #ffb4aa; }
+.lane-team-stats.blue.leading { background: #1d253d; }
+.lane-team-stats.red.leading { background: #382024; }
+.lane-data-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; line-height: 1.65; }
+.lane-data-row small { font-size: inherit; }
+.lane-team-stats.leading .lane-data-row:first-child > span:first-child strong, .metric-positive { color: #18bd21; }
+.metric-ahead, .gold-symbol { color: #ecc300; }
+.lane-gold-track { height: 6px; margin-top: 6px; background: #15121b; overflow: hidden; }
+.lane-gold-track > span { display: block; height: 100%; background: #0066f3; }
+.lane-team-stats.red .lane-gold-track > span { margin-left: auto; background: #e52521; }
+.lane-card-foot { margin-top: 5px; font-size: 10px; }
+.lane-card-foot .lane-score { padding: 2px 5px; font-size: 9px; }
+@media (max-width: 760px) {
+  .lane-card-head { grid-template-columns: 38px minmax(0, 1fr); gap: 6px; }
+  .lane-sides { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .lane-mid { grid-column: 1 / -1; grid-row: 1; justify-self: center; max-width: none; }
+  .lane-side.blue { grid-column: 1; grid-row: 2; }
+  .lane-side.red { grid-column: 2; grid-row: 2; }
+  .lane-data-row { display: grid; gap: 0; }
+  .lane-team-stats { font-size: 10px; padding: 5px; }
+}

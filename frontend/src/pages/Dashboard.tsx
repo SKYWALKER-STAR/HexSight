@@ -97,7 +97,7 @@ function LaneCard({ role, name, lane, fresh, patchVersion }: { patchVersion?: st
   const diffCs = lane?.differences.cs
   const diffLevel = lane?.differences.level
   const score = fresh ? lane?.advantage.score ?? null : null
-  const direction = lane?.reason ? 'unknown' : lane?.advantage.direction
+  const direction = !fresh || lane?.reason || score == null ? 'unknown' : lane?.advantage.direction
   const statusLabel = lane?.reason
     ? (role === 'JUNGLE' || role === 'SUPPORT') && lane?.blue && lane?.red
       ? '仅展示差异'
@@ -105,7 +105,7 @@ function LaneCard({ role, name, lane, fresh, patchVersion }: { patchVersion?: st
     : score == null
       ? '—'
       : signed(score)
-  const tone = lane?.reason ? '' : direction
+  const tone = direction || 'unknown'
   const icon = role === 'JUNGLE' ? <Waves size={14} /> : role === 'SUPPORT' ? <Shield size={14} /> : <Target size={14} />
   const blue = lane?.blue || null
   const red = lane?.red || null
@@ -131,13 +131,13 @@ function LaneCard({ role, name, lane, fresh, patchVersion }: { patchVersion?: st
             <div className="player-health">生命值 {format(blue?.currentHealth)} / {format(blue?.maxHealth)}</div>
             {blue?.currentHealth != null && blue?.maxHealth != null && blue.maxHealth > 0 && <progress aria-label="生命值" max={blue.maxHealth} value={Math.max(0, Math.min(blue.currentHealth, blue.maxHealth))} />}
 
-            <div className="lane-player">{blue?.name || '—'}</div>
+            <div className="lane-player">{blue?.name || '—'} {direction === 'blue' && <span className="lane-lead-tag">♛ 优势领先</span>}</div>
             <div className="lane-champion">{blue?.championDetails?.name || blue?.champion || '英雄未知'}</div>
             <Equipment items={blue?.items} patchVersion={patchVersion} />
           </div>
           <div className="lane-mid">
             <div className="lane-badge">
-              <span className="lane-badge-title">经济差</span>
+              <span className="lane-badge-title">{direction === 'blue' ? '◀ 蓝方优势' : direction === 'red' ? '红方优势 ▶' : direction === 'even' ? '≈ 均势' : '经济差'}</span>
               <span className="lane-badge-value">{signed(diffGold)}</span>
             </div>
             <div className="lane-badge-sub">
@@ -152,34 +152,36 @@ function LaneCard({ role, name, lane, fresh, patchVersion }: { patchVersion?: st
             <div className="player-health">生命值 {format(red?.currentHealth)} / {format(red?.maxHealth)}</div>
             {red?.currentHealth != null && red?.maxHealth != null && red.maxHealth > 0 && <progress aria-label="生命值" max={red.maxHealth} value={Math.max(0, Math.min(red.currentHealth, red.maxHealth))} />}
 
-            <div className="lane-player">{red?.name || '—'}</div>
+            <div className="lane-player">{red?.name || '—'} {direction === 'red' && <span className="lane-lead-tag">♛ 优势领先</span>}</div>
             <div className="lane-champion">{red?.championDetails?.name || red?.champion || '英雄未知'}</div>
             <Equipment items={red?.items} patchVersion={patchVersion} />
           </div>
         </div>
       </div>
 
-      <div className="lane-card-body">
-        <div className="lane-stat">
-          <span className="lane-stat-key">KDA</span>
-          <span className="lane-stat-val blue">{blueKda}</span>
-          <span className="lane-stat-val red">{redKda}</span>
-        </div>
-        <div className="lane-stat">
-          <span className="lane-stat-key">经济</span>
-          <span className="lane-stat-val blue">{format(blue?.gold)}</span>
-          <span className="lane-stat-val red">{format(red?.gold)}</span>
-        </div>
-        <div className="lane-stat">
-          <span className="lane-stat-key">补刀</span>
-          <span className="lane-stat-val blue">{format(blue?.cs)}</span>
-          <span className="lane-stat-val red">{format(red?.cs)}</span>
-        </div>
-        <div className="lane-stat">
-          <span className="lane-stat-key">等级</span>
-          <span className="lane-stat-val blue">{format(blue?.level)}</span>
-          <span className="lane-stat-val red">{format(red?.level)}</span>
-        </div>
+      <div className="lane-card-body lane-comparison">
+        {(['blue', 'red'] as const).map(side => {
+          const player = side === 'blue' ? blue : red
+          const sign = side === 'blue' ? 1 : -1
+          const csLead = diffCs == null ? null : diffCs * sign
+          const levelLead = diffLevel == null ? null : diffLevel * sign
+          const total = blue?.gold != null && red?.gold != null ? blue.gold + red.gold : null
+          const share = total && player?.gold != null ? player.gold / total * 100 : null
+          const leading = direction === side
+          return <div key={side} className={`lane-team-stats ${side} ${leading ? 'leading' : ''}`} aria-label={side === 'blue' ? '蓝方对位数据' : '红方对位数据'}>
+            <div className="lane-data-row">
+              <span>KDA: <strong>{side === 'blue' ? blueKda : redKda}</strong></span>
+              <span>CS: <strong className={fresh && csLead != null && csLead > 0 ? 'metric-ahead' : ''}>{format(player?.cs)}</strong>{fresh && csLead != null && csLead > 0 && <small className="metric-positive"> +{format(csLead)}</small>}</span>
+            </div>
+            <div className="lane-data-row">
+              <span>经济: <strong>{format(player?.gold)}</strong> <span className="gold-symbol">◉</span></span>
+              <span className={fresh && levelLead != null && levelLead > 0 ? 'metric-positive' : ''}>等级: <strong>Lv.{format(player?.level)}</strong>{fresh && levelLead != null && levelLead > 0 && <small> (+{format(levelLead)})</small>}</span>
+            </div>
+            <div className="lane-gold-track" title={share == null ? '经济占比未知' : `双方经济占比 ${share.toFixed(1)}%`}>
+              {share != null && <span style={{ width: `${share}%` }} />}
+            </div>
+          </div>
+        })}
       </div>
 
       <div className="lane-card-foot">
