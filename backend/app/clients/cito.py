@@ -60,7 +60,7 @@ class CitoClient:
             transport=transport, follow_redirects=False,
         )
 
-    async def get(self, path: str) -> dict:
+    async def get(self, path: str, *, allow_list: bool = False) -> dict | list:
         # Omit query values, headers and raw bodies: they can contain credentials.
         endpoint = urlsplit(path).path
         logger.debug('Cito GET path=%s', endpoint)
@@ -117,6 +117,9 @@ class CitoClient:
         except ValueError:
             logger.debug('Cito GET path=%s invalid_json', endpoint)
             raise CitoError('schema', 'Cito 未返回有效 JSON') from None
+        if allow_list and isinstance(data, list):
+            logger.debug('Cito GET path=%s parsed root_type=list entries=%d', endpoint, len(data))
+            return data
         if not isinstance(data, dict):
             logger.debug('Cito GET path=%s invalid_schema root_type=%s', endpoint, type(data).__name__)
             raise CitoError('schema', 'Cito 响应结构不符合预期')
@@ -134,8 +137,8 @@ class CitoClient:
             if time.monotonic() < self._items_refresh_at:
                 return self._items
             try:
-                body = await self.get('lol/static/items')
-                rows = body.get('data', body)
+                body = await self.get('lol/static/items', allow_list=True)
+                rows = body.get('data', body) if isinstance(body, dict) else body
                 if isinstance(rows, dict) and 'items' in rows:
                     rows = rows['items']
                 catalog = {}
@@ -146,12 +149,14 @@ class CitoClient:
                         if item_id is not None:
                             catalog[str(item_id)] = value
                 if not catalog:
-                    raise CitoError('schema', 'Invalid static item catalog')
+                    raise CitoError('schema',
+                                    f'Invalid static item catalog: rows_type={type(rows).__name__}, '
+                                    f'rows_count={len(rows) if isinstance(rows, (dict, list)) else 0}')
                 self._items = catalog
                 self._items_refresh_at = time.monotonic() + 86400
             except CitoError as error:
                 self._items_refresh_at = time.monotonic() + max(300, error.retry_after or 0)
-                logger.warning('Item catalog unavailable code=%s', error.code)
+                logger.warning('Item catalog unavailable code=%s reason=%s', error.code, str(error))
             return self._items
 
     async def stats(self, game_id: str) -> dict:

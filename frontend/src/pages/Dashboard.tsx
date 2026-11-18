@@ -255,7 +255,7 @@ export function Dashboard() {
   const refreshList = useCallback(() => {
     void api<MonitorList>('/api/monitors')
       .then(setList)
-      .catch(() => setRequestError('服务器正好像开小差了┭┮﹏┭┮'))
+      .catch(() => setRequestError('服务器好像开小差了┭┮﹏┭┮'))
   }, [])
 
   const { snapshot, history, status: pushStatus, connection, error, warnings } = useMonitor(gameId, refreshList)

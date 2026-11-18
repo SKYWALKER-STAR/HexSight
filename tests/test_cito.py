@@ -114,3 +114,33 @@ async def test_items_failure_cooldown(settings):
         assert body['data']['players'][0]['itemDetails'] == [None]
     assert sum(p.endswith('/static/items') for p in calls) == 1
     await client.close()
+
+
+@pytest.mark.parametrize('id_field', ['id', 'itemId'])
+async def test_items_root_list_shared(settings, id_field):
+    calls = []
+    item = {id_field: 1001, 'name': 'Boots', 'gold': {'total': 300}}
+    def handler(request):
+        calls.append(request.url.path)
+        if request.url.path.endswith('/static/items'):
+            return httpx.Response(200, json=[item])
+        return httpx.Response(200, json={'data': {'players': [{'items': [1001, '1001', 9999]}]}})
+    client = CitoClient(settings, transport=httpx.MockTransport(handler))
+    try:
+        results = await asyncio.gather(*(client.stats(str(i)) for i in range(5)))
+        assert sum(p.endswith('/static/items') for p in calls) == 1
+        for result in results:
+            assert result['data']['players'][0]['itemDetails'] == [item, item, None]
+    finally:
+        await client.close()
+
+
+async def test_stats_still_rejects_root_list(settings):
+    client = CitoClient(settings, transport=httpx.MockTransport(
+        lambda _: httpx.Response(200, json=[])))
+    try:
+        with pytest.raises(CitoError) as caught:
+            await client.stats('test')
+        assert caught.value.code == 'schema'
+    finally:
+        await client.close()
