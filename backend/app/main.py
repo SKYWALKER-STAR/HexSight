@@ -12,6 +12,7 @@ from backend.app.services.events import EventBus
 from backend.app.services.monitor import MonitorManager
 from backend.app.api.routes import router
 from backend.app.services.schedule import ScheduleService
+from backend.app.services.winrate import WinrateService
 
 
 def create_app(settings: Settings | None = None, *, client=None, repository=None):
@@ -42,6 +43,7 @@ def create_app(settings: Settings | None = None, *, client=None, repository=None
         app.state.settings = settings
         app.state.client = client or (DemoClient() if settings.demo_mode else CitoClient(settings))
         app.state.schedule = ScheduleService(app.state.client, settings.schedule_refresh_seconds)
+        app.state.winrate = WinrateService(app.state.client, settings.demo_mode)
         app.state.repo = repository or Repository(settings)
         app.state.events = EventBus()
         app.state.manager = MonitorManager(settings, app.state.client, app.state.repo, app.state.events)

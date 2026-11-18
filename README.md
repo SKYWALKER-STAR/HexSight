@@ -1,5 +1,13 @@
 # HexSight
 
+## 选手胜率榜
+
+访问 `/winrate`，或从监控页、赛程页导航进入。页面提供前三名展示、位置与最低场次筛选、选手/战队/国籍/ID 搜索、ID 复制和当前结果 CSV 导出。
+
+后端 `GET /api/leaderboards/winrate` 调用 Cito `/lol/leaderboards/winrate`，支持真实接口的顶层数组。使用进程共享的 1 小时按需缓存和并发锁；失败后至少冷却 5 分钟并遵守 `Retry-After`，有旧缓存时返回 `stale: true`。刷新与本地筛选不会绕过缓存。演示模式不调用 Cito，页面明确显示演示提示。
+
+榜单默认数量和统计范围遵循上游返回，不假设赛季或时间窗口。位置平均与战队人数仅对当前榜单计算；缺失战队不推断为自由人。2026-11-18 通过 Cito MCP 验证实际响应为 50 行，字段为 `rank/playerId/playerName/nationality/role/currentTeam/value/gamesPlayed`，其中 `value` 是 0–100 的胜率百分数。
+
 HexSight 是一个 LOL 职业赛事态势分析工具。手动输入 Cito `gameId`，即可开始采集、查看双方经济和资源差、五路对位及最近 30 分钟的优势趋势。
 
 第一版依据仓库中的 `HexSight_desgin_v1.2_MVP.docx` 实现。优势分是可解释的启发式指标，**不是获胜概率**。数据缺失不补零，数据过期或时间戳未知时暂停判断。

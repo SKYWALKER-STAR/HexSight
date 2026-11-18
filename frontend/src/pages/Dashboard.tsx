@@ -376,6 +376,7 @@ export function Dashboard() {
           </div>
           <div className="top-meta">
             <a href="/schedule">赛程与即将开赛 →</a>
+            <a href="/winrate">选手胜率榜 →</a>
             <span className="pill">LEAGUE OF LEGENDS</span>
             {list.demo_mode && <span className="pill pill-demo">演示模式</span>}
             <span className="version">MVP / 0.1</span>

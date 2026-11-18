@@ -6,6 +6,14 @@ from pydantic import BaseModel, Field
 from backend.app.clients.cito import CitoError
 
 router = APIRouter()
+
+
+@router.get('/api/leaderboards/winrate')
+async def winrate(request: Request):
+    try:
+        return await request.app.state.winrate.get()
+    except CitoError as error:
+        raise HTTPException(502, detail={'code': error.code, 'message': str(error)}) from None
 ID_PATTERN = r'^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$'
 GameId = Annotated[str, Path(pattern=ID_PATTERN, max_length=64)]
 
