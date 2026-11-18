@@ -50,6 +50,9 @@ class CitoClient:
     def __init__(self, settings: Settings, transport=None):
         self.settings = settings
         self.budget = RequestBudget(settings.request_budget)
+        self._items = {}
+        self._items_refresh_at = 0.0
+        self._items_lock = asyncio.Lock()
         self.http = httpx.AsyncClient(
             base_url=settings.cito_base_url.rstrip('/') + '/',
             headers={'x-api-key': settings.cito_api_key.get_secret_value(), 'accept': 'application/json'},
@@ -125,6 +128,32 @@ class CitoClient:
                      type(payload).__name__, len(payload) if isinstance(payload, (dict, list)) else None)
         return data
 
+    async def item_catalog(self):
+        """One full catalog per day, shared across games and concurrent requests."""
+        async with self._items_lock:
+            if time.monotonic() < self._items_refresh_at:
+                return self._items
+            try:
+                body = await self.get('lol/static/items')
+                rows = body.get('data', body)
+                if isinstance(rows, dict) and 'items' in rows:
+                    rows = rows['items']
+                catalog = {}
+                entries = rows.items() if isinstance(rows, dict) else enumerate(rows) if isinstance(rows, list) else []
+                for key, value in entries:
+                    if isinstance(value, dict):
+                        item_id = value.get('id', value.get('itemId', key if isinstance(rows, dict) else None))
+                        if item_id is not None:
+                            catalog[str(item_id)] = value
+                if not catalog:
+                    raise CitoError('schema', 'Invalid static item catalog')
+                self._items = catalog
+                self._items_refresh_at = time.monotonic() + 86400
+            except CitoError as error:
+                self._items_refresh_at = time.monotonic() + max(300, error.retry_after or 0)
+                logger.warning('Item catalog unavailable code=%s', error.code)
+            return self._items
+
     async def stats(self, game_id: str) -> dict:
         logger.debug('Stats fetch started game_id=%s', game_id)
         try:
@@ -134,6 +163,13 @@ class CitoClient:
                          game_id, error.code, error.retryable)
             raise
         data = body.get('data')
+        players = data.get('players', []) if isinstance(data, dict) else data if isinstance(data, list) else []
+        players = [p for p in players if isinstance(p, dict)] if isinstance(players, list) else []
+        if any(isinstance(p.get('items'), list) and any(type(i) in (int, str) and str(i) not in ('0', '') for i in p['items']) for p in players):
+            catalog = await self.item_catalog()
+            for player in players:
+                if isinstance(player.get('items'), list):
+                    player['itemDetails'] = [catalog.get(str(i)) for i in player['items'] if type(i) in (int, str)]
         logger.debug('Stats fetched game_id=%s data_type=%s entries=%s has_frame_timestamp=%s',
                      game_id, type(data).__name__, len(data) if isinstance(data, (dict, list)) else None,
                      bool(body.get('frameTimestamp')))

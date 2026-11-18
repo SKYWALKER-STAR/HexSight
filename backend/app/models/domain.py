@@ -29,6 +29,7 @@ class Player(BaseModel):
     deaths: float | None = None
     assists: float | None = None
     items: list[int | str] | None = None
+    itemDetails: list[dict[str, Any] | None] | None = None
     championIconUrl: str | None = None
     championDamageShare: float | None = None
     currentHealth: float | None = None

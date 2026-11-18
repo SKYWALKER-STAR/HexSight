@@ -85,3 +85,32 @@ async def test_http_cancellation(settings):
     await entered.wait(); task.cancel()
     with pytest.raises(asyncio.CancelledError): await task
     await client.close()
+
+async def test_items_shared_and_enriched(settings):
+    calls = []
+    def handler(request):
+        calls.append(request.url.path)
+        if request.url.path.endswith('/static/items'):
+            return httpx.Response(200, json={'data': {'1001': {'name': 'Boots', 'gold': {'total': 300}}}})
+        return httpx.Response(200, json={'data': {'players': [{'items': [1001, '1001', 9999, 0]}]}})
+    client = CitoClient(settings, transport=httpx.MockTransport(handler))
+    results = await asyncio.gather(*(client.stats(str(i)) for i in range(5)))
+    assert sum(p.endswith('/static/items') for p in calls) == 1
+    assert results[0]['data']['players'][0]['itemDetails'] == [
+        {'name': 'Boots', 'gold': {'total': 300}}, {'name': 'Boots', 'gold': {'total': 300}}, None, None]
+    await client.close()
+
+
+async def test_items_failure_cooldown(settings):
+    calls = []
+    def handler(request):
+        calls.append(request.url.path)
+        if request.url.path.endswith('/static/items'):
+            return httpx.Response(429, headers={'retry-after': '900'})
+        return httpx.Response(200, json={'data': {'players': [{'items': [1001]}]}})
+    client = CitoClient(settings, transport=httpx.MockTransport(handler))
+    for _ in range(3):
+        body = await client.stats('test')
+        assert body['data']['players'][0]['itemDetails'] == [None]
+    assert sum(p.endswith('/static/items') for p in calls) == 1
+    await client.close()
