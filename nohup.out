@@ -1,0 +1,21 @@
+nohup: ignoring input
+INFO:     Started server process [275146]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     10.8.0.1:46722 - "GET /api/monitors HTTP/1.1" 200 OK
+INFO:     10.8.0.1:46726 - "WebSocket /ws/games/lol-match-117393592614464360" [accepted]
+INFO:     connection open
+INFO:     10.8.0.1:47926 - "GET /api/monitors HTTP/1.1" 200 OK
+INFO:     10.8.0.1:47932 - "GET /api/games/lol-match-117393592614464360/latest HTTP/1.1" 404 Not Found
+INFO:     10.8.0.1:47936 - "GET /api/games/lol-match-117393592614464360/history HTTP/1.1" 200 OK
+INFO:     10.8.0.1:47944 - "GET /api/monitors HTTP/1.1" 200 OK
+INFO:     10.8.0.1:47960 - "GET /api/monitors HTTP/1.1" 200 OK
+INFO:     10.8.0.1:47964 - "WebSocket /ws/games/lol-match-117393592614464360" [accepted]
+INFO:     connection open
+INFO:     10.8.0.1:47968 - "GET /api/monitors HTTP/1.1" 200 OK
+INFO:     10.8.0.1:47980 - "GET /api/games/lol-match-117393592614464360/latest HTTP/1.1" 404 Not Found
+INFO:     10.8.0.1:47992 - "GET /api/games/lol-match-117393592614464360/history HTTP/1.1" 200 OK
+INFO:     10.8.0.1:48002 - "GET /api/monitors HTTP/1.1" 200 OK
+INFO:     10.8.0.1:48016 - "GET /api/monitors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44510 - "GET /api/monitors HTTP/1.1" 200 OK

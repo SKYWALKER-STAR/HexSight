@@ -1,0 +1,9 @@
+fastapi<1,>=0.115
+uvicorn[standard]<1,>=0.34
+httpx<1,>=0.28
+pydantic-settings<3,>=2.7
+redis<7,>=5.2
+
+[dev]
+pytest<10,>=8.3
+pytest-asyncio<2,>=0.25
