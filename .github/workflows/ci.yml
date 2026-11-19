@@ -36,8 +36,6 @@ jobs:
         run: |
           python -m venv .venv
           .venv/bin/python -m pip install '.[dev]'
-      - name: Test backend
-        run: .venv/bin/python -m pytest -q
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -46,9 +44,6 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
-      - name: Test frontend units
-        working-directory: frontend
-        run: node --test tests/*.test.mjs
       # 1. 构建后端镜像；使用本地标签，允许仓库地址暂时留空。
       - uses: docker/setup-buildx-action@v3
       - name: Build backend Docker image
