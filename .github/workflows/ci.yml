@@ -22,7 +22,7 @@ env:
 
 
 jobs:
-  building:
+  Building:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -43,7 +43,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm ci
+        run: npm ci:
       # 1. 构建后端镜像；使用本地标签，允许仓库地址暂时留空。
       - uses: docker/setup-buildx-action@v3
       - name: Build backend Docker image
@@ -96,4 +96,4 @@ jobs:
           scp -r -P "$FRONTEND_SSH_PORT" -i "$ssh_dir/key" \
             -o BatchMode=yes -o StrictHostKeyChecking=yes \
             -o "UserKnownHostsFile=$ssh_dir/known_hosts" \
-            frontend/dist/. "$FRONTEND_DESTINATION"
+            frontend/dist/* "$FRONTEND_DESTINATION"
