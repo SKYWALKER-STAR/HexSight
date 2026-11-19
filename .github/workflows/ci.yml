@@ -2,13 +2,24 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master,debug]
   pull_request:
   workflow_dispatch:
   workflow_call:
 
 permissions:
   contents: read
+
+# 填写下面两处地址后启用对应上传步骤。
+# 镜像仓库凭据：Secrets.REGISTRY_USERNAME / Secrets.REGISTRY_PASSWORD
+# SCP 凭据：Secrets.FRONTEND_SSH_PRIVATE_KEY / Secrets.FRONTEND_SSH_KNOWN_HOSTS
+# FRONTEND_SSH_KNOWN_HOSTS 应填写经过核实的目标服务器 SSH host key。
+env:
+  REGISTRY: 'crpi-9jwlonaugv9hai08.cn-guangzhou.personal.cr.aliyuncs.com' # 例如 registry.example.com（不带 https://）
+  BACKEND_IMAGE: hexsight/backend # 按仓库要求调整命名空间/镜像名
+  FRONTEND_DESTINATION: '8.134.95.226:/data/software/nginx/html/hexsight' # 例如 deploy@example.com:/var/www/hexsight/（目录需已存在）
+  FRONTEND_SSH_PORT: '22'
+
 
 jobs:
   checks:
@@ -38,19 +49,56 @@ jobs:
       - name: Test frontend units
         working-directory: frontend
         run: node --test tests/*.test.mjs
+      # 1. 构建后端镜像；使用本地标签，允许仓库地址暂时留空。
+      - uses: docker/setup-buildx-action@v3
+      - name: Build backend Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          load: true
+          push: false
+          tags: hexsight-backend:sha-${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+      # 2. 构建前端静态文件，输出到 frontend/dist/。
       - name: Build frontend
         working-directory: frontend
         run: npm run build
-      - name: Install browser
-        working-directory: frontend
-        run: npx playwright install --with-deps chromium
-      - name: Test end to end
-        working-directory: frontend
-        run: npm run test:e2e
-      - name: Upload test diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v4
+
+      # 3. 测试全部通过后推送已构建的镜像。
+      # 仅 main/master 的 push 或手动触发时上传；被 CD 调用时不重复上传。
+      - name: Log in to image registry
+        if: env.REGISTRY != '' && github.workflow == 'CI' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        uses: docker/login-action@v3
         with:
-          name: playwright-results
-          path: frontend/test-results/
-          if-no-files-found: ignore
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - name: Push backend Docker image
+        if: env.REGISTRY != '' && github.workflow == 'CI' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        run: |
+          image="${REGISTRY}/${BACKEND_IMAGE}:sha-${GITHUB_SHA}"
+          docker tag "hexsight-backend:sha-${GITHUB_SHA}" "$image"
+          docker push "$image"
+
+      # 4. 将前端构建产物上传到指定服务器目录。
+      - name: Upload frontend via SCP
+        if: env.FRONTEND_DESTINATION != '' && github.workflow == 'CI' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.FRONTEND_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.FRONTEND_SSH_KNOWN_HOSTS }}
+        run: |
+          if [[ -z "$SSH_PRIVATE_KEY" || -z "$SSH_KNOWN_HOSTS" ]]; then
+            echo "::error::Configure FRONTEND_SSH_PRIVATE_KEY and FRONTEND_SSH_KNOWN_HOSTS secrets."
+            exit 1
+          fi
+          ssh_dir="$(mktemp -d)"
+          trap 'rm -rf "$ssh_dir"' EXIT
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$ssh_dir/key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+          chmod 600 "$ssh_dir/key" "$ssh_dir/known_hosts"
+          scp -r -P "$FRONTEND_SSH_PORT" -i "$ssh_dir/key" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o "UserKnownHostsFile=$ssh_dir/known_hosts" \
+            frontend/dist/. "$FRONTEND_DESTINATION"
