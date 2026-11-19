@@ -17,12 +17,12 @@ permissions:
 env:
   REGISTRY: 'crpi-9jwlonaugv9hai08.cn-guangzhou.personal.cr.aliyuncs.com/snake-2001' # 例如 registry.example.com（不带 https://）
   BACKEND_IMAGE: hexsight-backend:latest # 按仓库要求调整命名空间/镜像名
-  FRONTEND_DESTINATION: '8.134.95.226:/data/software/nginx/html/hexsight' # 例如 deploy@example.com:/var/www/hexsight/（目录需已存在）
+  FRONTEND_DESTINATION: 'app@8.134.95.226:/data/software/nginx/html/hexsight' # 例如 deploy@example.com:/var/www/hexsight/（目录需已存在）
   FRONTEND_SSH_PORT: '22'
 
 
 jobs:
-  checks:
+  building:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
