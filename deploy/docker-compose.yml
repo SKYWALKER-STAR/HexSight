@@ -1,36 +1,10 @@
 services:
   backend:
-    build:
-      context: ..
-      dockerfile: backend/Dockerfile
+    # Replace with your backend image name and tag.
+    image: crpi-9jwlonaugv9hai08.cn-guangzhou.personal.cr.aliyuncs.com/snake-2001/hexsight-backend:latest
     env_file: ../.env
     environment:
       WEB_CONCURRENCY: '1'
-    ports: ['127.0.0.1:8000:8000']
+    network_mode: host
+    command: ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
     restart: unless-stopped
-  frontend:
-    build:
-      context: ..
-      dockerfile: frontend/Dockerfile
-    ports: ['127.0.0.1:8080:80']
-    depends_on: [backend]
-    restart: unless-stopped
-  redis:
-    image: redis:7-alpine
-    profiles: [storage]
-    volumes: ['redis_data:/data']
-    command: ['redis-server', '--appendonly', 'yes']
-    restart: unless-stopped
-  clickhouse:
-    image: clickhouse/clickhouse-server:25.3
-    profiles: [storage]
-    environment:
-      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-hexsight}
-      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
-      CLICKHOUSE_DB: hexsight
-      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
-    volumes: ['clickhouse_data:/var/lib/clickhouse']
-    restart: unless-stopped
-volumes:
-  redis_data:
-  clickhouse_data:
