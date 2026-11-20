@@ -17,6 +17,9 @@ jobs:
     steps:
       - name: Deploy backend with Docker Compose
         env:
+          REGISTRY_HOST: crpi-9jwlonaugv9hai08.cn-guangzhou.personal.cr.aliyuncs.com
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
           DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
           DEPLOY_USER: ${{ vars.DEPLOY_USER }}
           DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
@@ -31,7 +34,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for name in DEPLOY_HOST DEPLOY_USER DEPLOY_COMPOSE_FILE SSH_PRIVATE_KEY SSH_KNOWN_HOSTS BASTION_HOST BASTION_USER BASTION_SSH_PRIVATE_KEY BASTION_SSH_KNOWN_HOSTS; do
+          for name in REGISTRY_USERNAME REGISTRY_PASSWORD DEPLOY_HOST DEPLOY_USER DEPLOY_COMPOSE_FILE SSH_PRIVATE_KEY SSH_KNOWN_HOSTS BASTION_HOST BASTION_USER BASTION_SSH_PRIVATE_KEY BASTION_SSH_KNOWN_HOSTS; do
             if [[ -z "${!name}" ]]; then
               echo "::error::Configure $name in repository Actions variables/secrets."
               exit 1
@@ -77,12 +80,20 @@ jobs:
             ForwardAgent no
           EOF
           chmod 600 "$ssh_dir"/*
-          ssh -F "$ssh_dir/config" deployment "bash -se -- '$DEPLOY_COMPOSE_FILE'" <<'REMOTE'
+          # Send shell-escaped credentials over encrypted stdin, not command arguments.
+          {
+          printf 'REGISTRY_HOST=%q\nREGISTRY_USERNAME=%q\nREGISTRY_PASSWORD=%q\n' "$REGISTRY_HOST" "$REGISTRY_USERNAME" "$REGISTRY_PASSWORD"
+          cat <<'REMOTE'
           set -euo pipefail
           compose_file="$1"
           test -f "$compose_file"
+          export DOCKER_CONFIG="$(mktemp -d)"
+          trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+          printf '%s' "$REGISTRY_PASSWORD" | docker login "$REGISTRY_HOST" --username "$REGISTRY_USERNAME" --password-stdin
+          unset REGISTRY_PASSWORD
           docker compose -f "$compose_file" config --quiet
           docker compose -f "$compose_file" pull backend
           docker compose -f "$compose_file" up -d --no-deps --wait --wait-timeout 120 backend
           docker compose -f "$compose_file" ps backend
           REMOTE
+          } | ssh -F "$ssh_dir/config" deployment "bash -se -- '$DEPLOY_COMPOSE_FILE'"
