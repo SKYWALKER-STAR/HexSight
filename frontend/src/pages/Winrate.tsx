@@ -1,3 +1,4 @@
+import { SiteHeader } from '../components/SiteHeader'
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import './winrate.css'
@@ -40,7 +41,7 @@ export function Winrate() {
     const a = document.createElement('a'); a.href = url; a.download = 'hexsight-winrate.csv'; a.click(); URL.revokeObjectURL(url)
   }
   return <div className="wr-page">
-    <header className="wr-nav"><a className="wr-brand" href="/">▣ PIXEL HUD <small>// HEXSIGHT · LOL ESPORTS</small></a><nav><a href="/">实时对局</a><a href="/schedule">即将开赛</a><a href="/winrate" aria-current="page">选手胜率榜</a></nav><span className="wr-source">CITO / 排行快照</span></header>
+    <SiteHeader current="/winrate" status={'CITO / 排行快照'} />
     <div className="wr-ticker"><b>■ PLAYER WINRATE RADAR</b><span>已载入 {all.length} 位选手 · 榜内平均 {average == null ? '—' : pct(average)}</span><span>北京时间 {data?.fetchedAt ? new Date(data.fetchedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false }) : '—'}</span></div>
     <main className="wr-main">
       <section className="wr-intro wr-panel"><div><span className="wr-kicker">ARCADE ESPORTS RADAR</span><h1>🏆 职业选手胜率雷达榜</h1><p>从胜率、比赛场次和位置，查看上榜选手的表现。<br />排名保留官方顺序；统计范围以接口返回榜单为准。</p></div><div className="wr-highlights"><div><small>♛ 榜首胜率</small><strong>{all[0] ? pct(all[0].value) : '—'}</strong><span>{all[0]?.playerName || '等待数据'}</span></div><div><small>▣ 最多比赛场次</small><strong>{mostGames?.gamesPlayed ?? '—'}</strong><span>{mostGames?.playerName || '—'}</span></div><div><small>◈ 上榜战队</small><strong>{new Set(all.map(p => p.currentTeam).filter(Boolean)).size}</strong><span>仅统计已知战队</span></div></div></section>

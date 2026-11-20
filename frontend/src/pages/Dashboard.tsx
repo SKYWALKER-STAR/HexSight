@@ -1,3 +1,4 @@
+import { SiteHeader } from '../components/SiteHeader'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Activity,
@@ -370,18 +371,7 @@ export function Dashboard() {
       </aside>
 
       <div className="workspace">
-        <header className="topbar">
-          <div className="brand">
-            HexSight<span>赛事态势分析</span>
-          </div>
-          <div className="top-meta">
-            <a href="/schedule">赛程与即将开赛 →</a>
-            <a href="/winrate">选手胜率榜 →</a>
-            <span className="pill">LEAGUE OF LEGENDS</span>
-            {list.demo_mode && <span className="pill pill-demo">演示模式</span>}
-            <span className="version">MVP / 0.1</span>
-          </div>
-        </header>
+        <SiteHeader current="/" status={list.demo_mode ? 'DEMO / 合成数据' : 'LIVE / MONITOR'} />
 
         <main>
           <div className="page-heading">
