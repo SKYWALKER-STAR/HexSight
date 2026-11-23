@@ -167,9 +167,13 @@ async def tournaments(request: Request, limit: int = Query(50, ge=1, le=50), off
                 response_json = response_json.replace(key, '[REDACTED]')
             logger.debug('Cito tournaments response limit=%d offset=%d body=%s',
                          limit, offset, response_json)
-        data = body.get('data', body)
+        # Cito may include a compatibility `data` list alongside the canonical
+        # top-level tournaments and meta. Prefer the canonical envelope.
+        data = body if isinstance(body.get('tournaments'), list) else body.get('data', body)
         if not isinstance(data, dict) or not isinstance(data.get('tournaments'), list) or not isinstance(data.get('meta'), dict):
             raise CitoError('schema', 'Unexpected tournament response')
         return {**data, 'demo_mode': False}
     except CitoError as error:
+        logger.warning('Cito tournaments failed limit=%d offset=%d code=%s message=%s',
+                       limit, offset, error.code, str(error))
         raise HTTPException(502, detail={'code': error.code, 'message': str(error)}) from None
