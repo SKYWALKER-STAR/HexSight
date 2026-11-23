@@ -150,3 +150,16 @@ async def cito_webhook(request: Request):
     if len(state.webhook_seen) > 10000:
         state.webhook_seen.popitem(last=False)
     return {'status': 'accepted', 'monitors_notified': count}
+
+@router.get('/api/tournaments')
+async def tournaments(request: Request, limit: int = Query(50, ge=1, le=50), offset: int = Query(0, ge=0)):
+    if request.app.state.settings.demo_mode:
+        return {'tournaments': [], 'meta': {'total': 0, 'limit': limit, 'offset': offset, 'hasMore': False}, 'demo_mode': True}
+    try:
+        body = await request.app.state.client.get(f'lol/tournaments?limit={limit}&offset={offset}')
+        data = body.get('data', body)
+        if not isinstance(data, dict) or not isinstance(data.get('tournaments'), list) or not isinstance(data.get('meta'), dict):
+            raise CitoError('schema', 'Unexpected tournament response')
+        return {**data, 'demo_mode': False}
+    except CitoError as error:
+        raise HTTPException(502, detail={'code': error.code, 'message': str(error)}) from None
