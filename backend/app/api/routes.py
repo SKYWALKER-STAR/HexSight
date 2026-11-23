@@ -1,4 +1,6 @@
 import asyncio
+import json
+import logging
 import re
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Path, Query, Request, WebSocket, WebSocketDisconnect
@@ -6,6 +8,7 @@ from pydantic import BaseModel, Field
 from backend.app.clients.cito import CitoError
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get('/api/leaderboards/winrate')
@@ -157,6 +160,13 @@ async def tournaments(request: Request, limit: int = Query(50, ge=1, le=50), off
         return {'tournaments': [], 'meta': {'total': 0, 'limit': limit, 'offset': offset, 'hasMore': False}, 'demo_mode': True}
     try:
         body = await request.app.state.client.get(f'lol/tournaments?limit={limit}&offset={offset}')
+        if logger.isEnabledFor(logging.DEBUG):
+            response_json = json.dumps(body, ensure_ascii=False)
+            key = request.app.state.settings.cito_api_key.get_secret_value()
+            if key:
+                response_json = response_json.replace(key, '[REDACTED]')
+            logger.debug('Cito tournaments response limit=%d offset=%d body=%s',
+                         limit, offset, response_json)
         data = body.get('data', body)
         if not isinstance(data, dict) or not isinstance(data.get('tournaments'), list) or not isinstance(data.get('meta'), dict):
             raise CitoError('schema', 'Unexpected tournament response')
